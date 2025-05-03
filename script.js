@@ -10,6 +10,10 @@ let gameState = {
     mineCount: 1
 };
 
+// Add to the top of the file with other state variables
+let friendRequests = JSON.parse(localStorage.getItem('friendRequests')) || [];
+let friends = JSON.parse(localStorage.getItem('friends')) || {};
+
 // Initialize the game
 document.addEventListener('DOMContentLoaded', () => {
     setupAuthTabs();
@@ -400,8 +404,11 @@ function showWinPopup(winnings) {
     popup.innerHTML = `
         <div class="popup-content">
             <h2>Congratulations!</h2>
-            <p>You won $${winnings.toFixed(2)}</p>
-            <div class="win-animation">$${winnings.toFixed(2)}</div>
+            <p>You won</p>
+            <div class="win-animation">
+                <div class="bloom-effect"></div>
+                <div class="win-amount">$${winnings.toFixed(2)}</div>
+            </div>
             <button onclick="closePopup()">Continue</button>
         </div>
     `;
@@ -427,43 +434,74 @@ function showWinPopup(winnings) {
         .popup-content {
             background: #1a1a2e;
             padding: 2rem;
-            border-radius: 10px;
+            border-radius: 20px;
             text-align: center;
             max-width: 400px;
             width: 90%;
+            position: relative;
+            overflow: hidden;
         }
         .popup-content h2 {
             color: #2ecc71;
             margin-bottom: 1rem;
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
         }
         .popup-content p {
             color: #fff;
             margin-bottom: 1.5rem;
+            font-size: 1.2rem;
         }
         .win-animation {
-            font-size: 2.5rem;
+            position: relative;
+            margin: 2rem 0;
+        }
+        .win-amount {
+            font-size: 3rem;
             color: #2ecc71;
             font-weight: bold;
-            margin: 1rem 0;
-            animation: scaleUp 1s ease-in-out;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+            animation: amountPulse 2s infinite;
         }
-        @keyframes scaleUp {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
+        .bloom-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(46, 204, 113, 0.8) 0%, rgba(46, 204, 113, 0) 70%);
+            border-radius: 50%;
+            animation: bloomPulse 2s infinite;
+            z-index: 1;
+        }
+        @keyframes bloomPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+        }
+        @keyframes amountPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         .popup-content button {
-            background: #4CAF50;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: #fff;
             border: none;
             padding: 0.8rem 1.5rem;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         .popup-content button:hover {
-            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
     `;
     document.head.appendChild(style);
@@ -475,6 +513,9 @@ function animateBalanceIncrease(amount) {
     const targetBalance = currentBalance + amount;
     const duration = 2000; // 2 seconds
     const startTime = performance.now();
+    
+    // Add bloom effect to balance display
+    balanceDisplay.classList.add('balance-bloom');
     
     function updateBalance(currentTime) {
         const elapsed = currentTime - startTime;
@@ -488,6 +529,11 @@ function animateBalanceIncrease(amount) {
         
         if (progress < 1) {
             requestAnimationFrame(updateBalance);
+        } else {
+            // Remove bloom effect after animation
+            setTimeout(() => {
+                balanceDisplay.classList.remove('balance-bloom');
+            }, 500);
         }
     }
     
@@ -565,6 +611,17 @@ function updateLeaderboard() {
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const sortedUsers = [...users].sort((a, b) => b.balance - a.balance);
     
+    // Add header
+    const header = document.createElement('div');
+    header.className = 'leaderboard-header';
+    header.innerHTML = `
+        <span class="rank">Rank</span>
+        <span class="username">Username</span>
+        <span class="status">Status</span>
+        <span class="balance">Balance</span>
+    `;
+    leaderboardList.appendChild(header);
+    
     sortedUsers.forEach((user, index) => {
         const entry = document.createElement('div');
         entry.className = 'leaderboard-entry';
@@ -575,14 +632,18 @@ function updateLeaderboard() {
         else if (index === 1) rankEmoji = '🥈';
         else if (index === 2) rankEmoji = '🥉';
         
+        // Check if user is currently playing
+        const isActive = user.username === currentUser?.username;
+        
         entry.innerHTML = `
             <span class="rank">${rankEmoji} ${index + 1}.</span>
             <span class="username">${user.username}</span>
+            <span class="status">${isActive ? '🟢 Playing' : '⚪ Offline'}</span>
             <span class="balance">$${user.balance.toFixed(2)}</span>
         `;
         
         // Highlight current user
-        if (user.username === currentUser.username) {
+        if (isActive) {
             entry.classList.add('current-user');
         }
         
@@ -590,18 +651,31 @@ function updateLeaderboard() {
     });
 }
 
-// Add this to the existing CSS in the JavaScript
+// Update the leaderboard styles
 const style = document.createElement('style');
 style.textContent = `
+    .leaderboard-header {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
     .leaderboard-entry {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: auto 1fr auto auto;
         gap: 1rem;
         padding: 1rem;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 10px;
         transition: all 0.3s ease;
         align-items: center;
+        margin-bottom: 0.5rem;
     }
     
     .leaderboard-entry.current-user {
@@ -618,14 +692,258 @@ style.textContent = `
         font-weight: 500;
     }
     
+    .leaderboard-entry .status {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        min-width: 6rem;
+        text-align: center;
+    }
+    
     .leaderboard-entry .balance {
         font-weight: bold;
         color: #4CAF50;
+        min-width: 8rem;
+        text-align: right;
     }
     
     .leaderboard-entry:hover {
         transform: translateX(5px);
         background: rgba(255, 255, 255, 0.1);
     }
+    
+    #leaderboard-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    #leaderboard-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #leaderboard-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+    
+    #leaderboard-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+    
+    #leaderboard-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// Add bloom effect styles for balance display
+const balanceStyle = document.createElement('style');
+balanceStyle.textContent = `
+    .balance-bloom {
+        position: relative;
+        animation: balancePulse 0.5s ease-in-out;
+    }
+    
+    .balance-bloom::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(46, 204, 113, 0.5) 0%, rgba(46, 204, 113, 0) 70%);
+        border-radius: 50%;
+        animation: balanceBloom 0.5s ease-in-out;
+    }
+    
+    @keyframes balancePulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes balanceBloom {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    }
+`;
+document.head.appendChild(balanceStyle);
+
+// Add these functions after the existing functions
+function searchFriends() {
+    const searchInput = document.getElementById('friend-search');
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    if (!searchTerm) return;
+    
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    const results = users.filter(user => 
+        user.username.toLowerCase().includes(searchTerm) && 
+        user.username !== currentUser?.username &&
+        !friends[currentUser?.username]?.includes(user.username)
+    );
+    
+    const searchResults = document.createElement('div');
+    searchResults.className = 'search-results';
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
+    } else {
+        results.forEach(user => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'search-result-item';
+            resultItem.innerHTML = `
+                <div>${user.username}</div>
+                <button class="add-friend-btn" onclick="sendFriendRequest('${user.username}')">Add Friend</button>
+            `;
+            searchResults.appendChild(resultItem);
+        });
+    }
+    
+    // Remove existing results if any
+    const existingResults = document.querySelector('.search-results');
+    if (existingResults) {
+        existingResults.remove();
+    }
+    
+    searchInput.parentNode.appendChild(searchResults);
+}
+
+function sendFriendRequest(username) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const request = {
+        from: currentUser.username,
+        to: username,
+        timestamp: new Date().toISOString()
+    };
+    
+    friendRequests.push(request);
+    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
+    
+    // Remove search results
+    const searchResults = document.querySelector('.search-results');
+    if (searchResults) {
+        searchResults.remove();
+    }
+    
+    // Clear search input
+    document.getElementById('friend-search').value = '';
+    
+    updateFriendRequests();
+}
+
+function updateFriendRequests() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const requestsList = document.getElementById('friend-requests-list');
+    requestsList.innerHTML = '';
+    
+    const userRequests = friendRequests.filter(request => request.to === currentUser.username);
+    
+    if (userRequests.length === 0) {
+        requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
+        return;
+    }
+    
+    userRequests.forEach(request => {
+        const requestItem = document.createElement('div');
+        requestItem.className = 'friend-request-item';
+        requestItem.innerHTML = `
+            <div>${request.from}</div>
+            <div class="friend-request-actions">
+                <button class="accept-request" onclick="handleFriendRequest('${request.from}', true)">Accept</button>
+                <button class="reject-request" onclick="handleFriendRequest('${request.from}', false)">Reject</button>
+            </div>
+        `;
+        requestsList.appendChild(requestItem);
+    });
+}
+
+function handleFriendRequest(username, accept) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    // Remove the request
+    friendRequests = friendRequests.filter(request => 
+        !(request.from === username && request.to === currentUser.username)
+    );
+    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
+    
+    if (accept) {
+        // Add to friends list
+        if (!friends[currentUser.username]) {
+            friends[currentUser.username] = [];
+        }
+        if (!friends[username]) {
+            friends[username] = [];
+        }
+        
+        if (!friends[currentUser.username].includes(username)) {
+            friends[currentUser.username].push(username);
+        }
+        if (!friends[username].includes(currentUser.username)) {
+            friends[username].push(currentUser.username);
+        }
+        
+        localStorage.setItem('friends', JSON.stringify(friends));
+    }
+    
+    updateFriendRequests();
+    updateFriendsList();
+}
+
+function updateFriendsList() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const friendsList = document.getElementById('friends-list');
+    friendsList.innerHTML = '';
+    
+    const userFriends = friends[currentUser.username] || [];
+    
+    if (userFriends.length === 0) {
+        friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
+        return;
+    }
+    
+    userFriends.forEach(friend => {
+        const friendItem = document.createElement('div');
+        friendItem.className = 'friend-item';
+        friendItem.innerHTML = `
+            <div>${friend}</div>
+            <div class="friend-status ${friend === currentUser.username ? 'online' : 'offline'}">
+                ${friend === currentUser.username ? 'Online' : 'Offline'}
+            </div>
+        `;
+        friendsList.appendChild(friendItem);
+    });
+}
+
+// Add to the initializeGame function
+function initializeGame() {
+    // ... existing initialization code ...
+    
+    // Initialize friend system
+    updateFriendRequests();
+    updateFriendsList();
+    
+    // Add event listener for friend search
+    document.getElementById('friend-search').addEventListener('input', searchFriends);
+}
+
+// Add to the handleLogin function
+function handleLogin() {
+    // ... existing login code ...
+    
+    // Update friend lists after login
+    updateFriendRequests();
+    updateFriendsList();
+} 
