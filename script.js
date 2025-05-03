@@ -68,6 +68,10 @@ function login() {
         currentUser = user;
         localStorage.setItem('currentUser', JSON.stringify(user));
         showGameSection();
+        
+        // Update friend lists after login
+        updateFriendRequests();
+        updateFriendsList();
     } else {
         alert('Invalid credentials');
     }
@@ -123,6 +127,10 @@ function showGameSection() {
     updateLeaderboard();
     updateTransactionHistory();
     initializeGameBoard();
+    
+    // Initialize friend system
+    updateFriendRequests();
+    updateFriendsList();
 }
 
 function showAuthSection() {
@@ -777,7 +785,13 @@ function searchFriends() {
     const searchInput = document.getElementById('friend-search');
     const searchTerm = searchInput.value.toLowerCase();
     
-    if (!searchTerm) return;
+    if (!searchTerm) {
+        const existingResults = document.querySelector('.search-results');
+        if (existingResults) {
+            existingResults.remove();
+        }
+        return;
+    }
     
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -787,6 +801,12 @@ function searchFriends() {
         user.username !== currentUser?.username &&
         !friends[currentUser?.username]?.includes(user.username)
     );
+    
+    // Remove existing results if any
+    const existingResults = document.querySelector('.search-results');
+    if (existingResults) {
+        existingResults.remove();
+    }
     
     const searchResults = document.createElement('div');
     searchResults.className = 'search-results';
@@ -805,18 +825,22 @@ function searchFriends() {
         });
     }
     
-    // Remove existing results if any
-    const existingResults = document.querySelector('.search-results');
-    if (existingResults) {
-        existingResults.remove();
-    }
-    
     searchInput.parentNode.appendChild(searchResults);
 }
 
 function sendFriendRequest(username) {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     if (!currentUser) return;
+    
+    // Check if request already exists
+    const existingRequest = friendRequests.find(
+        request => request.from === currentUser.username && request.to === username
+    );
+    
+    if (existingRequest) {
+        alert('Friend request already sent');
+        return;
+    }
     
     const request = {
         from: currentUser.username,
@@ -837,6 +861,7 @@ function sendFriendRequest(username) {
     document.getElementById('friend-search').value = '';
     
     updateFriendRequests();
+    alert('Friend request sent successfully!');
 }
 
 function updateFriendRequests() {
@@ -844,6 +869,8 @@ function updateFriendRequests() {
     if (!currentUser) return;
     
     const requestsList = document.getElementById('friend-requests-list');
+    if (!requestsList) return;
+    
     requestsList.innerHTML = '';
     
     const userRequests = friendRequests.filter(request => request.to === currentUser.username);
@@ -894,6 +921,9 @@ function handleFriendRequest(username, accept) {
         }
         
         localStorage.setItem('friends', JSON.stringify(friends));
+        alert(`You are now friends with ${username}!`);
+    } else {
+        alert(`Friend request from ${username} rejected`);
     }
     
     updateFriendRequests();
@@ -905,6 +935,8 @@ function updateFriendsList() {
     if (!currentUser) return;
     
     const friendsList = document.getElementById('friends-list');
+    if (!friendsList) return;
+    
     friendsList.innerHTML = '';
     
     const userFriends = friends[currentUser.username] || [];
@@ -936,14 +968,34 @@ function initializeGame() {
     updateFriendsList();
     
     // Add event listener for friend search
-    document.getElementById('friend-search').addEventListener('input', searchFriends);
+    const searchInput = document.getElementById('friend-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', searchFriends);
+    }
 }
 
-// Add to the handleLogin function
+// Update the handleLogin function
 function handleLogin() {
-    // ... existing login code ...
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
     
-    // Update friend lists after login
-    updateFriendRequests();
-    updateFriendsList();
+    if (!username || !password) {
+        alert('Please enter both username and password');
+        return;
+    }
+    
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const user = users.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        showGameSection();
+        
+        // Update friend lists after login
+        updateFriendRequests();
+        updateFriendsList();
+    } else {
+        alert('Invalid credentials');
+    }
 } 
