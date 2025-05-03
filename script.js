@@ -590,7 +590,6 @@ function showWinPopup(winnings) {
             <h2>Congratulations!</h2>
             <p>You won</p>
             <div class="win-animation">
-                <div class="bloom-effect"></div>
                 <div class="win-amount">$${winnings.toFixed(2)}</div>
             </div>
             <button onclick="closePopup()">Continue</button>
@@ -629,7 +628,6 @@ function showWinPopup(winnings) {
             color: #2ecc71;
             margin-bottom: 1rem;
             font-size: 2rem;
-            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
         }
         .popup-content p {
             color: #fff;
@@ -646,25 +644,7 @@ function showWinPopup(winnings) {
             font-weight: bold;
             position: relative;
             z-index: 2;
-            text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
             animation: amountPulse 2s infinite;
-        }
-        .bloom-effect {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(46, 204, 113, 0.8) 0%, rgba(46, 204, 113, 0) 70%);
-            border-radius: 50%;
-            animation: bloomPulse 2s infinite;
-            z-index: 1;
-        }
-        @keyframes bloomPulse {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
         }
         @keyframes amountPulse {
             0% { transform: scale(1); }
@@ -698,9 +678,6 @@ function animateBalanceIncrease(amount) {
     const duration = 2000; // 2 seconds
     const startTime = performance.now();
     
-    // Add bloom effect to balance display
-    balanceDisplay.classList.add('balance-bloom');
-    
     function updateBalance(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
@@ -713,11 +690,6 @@ function animateBalanceIncrease(amount) {
         
         if (progress < 1) {
             requestAnimationFrame(updateBalance);
-        } else {
-            // Remove bloom effect after animation
-            setTimeout(() => {
-                balanceDisplay.classList.remove('balance-bloom');
-            }, 500);
         }
     }
     
@@ -920,41 +892,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Add bloom effect styles for balance display
-const balanceStyle = document.createElement('style');
-balanceStyle.textContent = `
-    .balance-bloom {
-        position: relative;
-        animation: balancePulse 0.5s ease-in-out;
-    }
-    
-    .balance-bloom::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(46, 204, 113, 0.5) 0%, rgba(46, 204, 113, 0) 70%);
-        border-radius: 50%;
-        animation: balanceBloom 0.5s ease-in-out;
-    }
-    
-    @keyframes balancePulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-    
-    @keyframes balanceBloom {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-        100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-    }
-`;
-document.head.appendChild(balanceStyle);
 
 // Update the initializeGame function
 function initializeGame() {
