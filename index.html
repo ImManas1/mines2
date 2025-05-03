@@ -63,17 +63,35 @@
                         </div>
                     </div>
                     <div class="bet-controls">
-                        <input type="number" id="bet-amount" min="1" value="10">
+                        <input type="number" id="bet-amount" placeholder="Enter bet amount" min="1">
                         <button onclick="placeBet()">Place Bet</button>
                     </div>
                     <div class="game-stats">
                         <div id="current-bet">Current Bet: $0</div>
-                        <div id="multiplier">Multiplier: 1.00x</div>
-                        <div id="probability">Probability: 0%</div>
+                        <div id="multiplier">Base Multiplier: 1.00x</div>
+                        <div id="probability">Probability: 4.00%</div>
                         <div id="potential-win">Potential Win: $0</div>
-                    </div>
-                    <div class="game-actions">
                         <button id="cashout-btn" onclick="cashout()" disabled>Cashout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friends-section">
+                <div class="friends-header">
+                    <h3>Friends</h3>
+                    <div class="friend-search">
+                        <input type="text" id="friend-search" placeholder="Search for friends...">
+                        <button onclick="searchFriends()">Search</button>
+                    </div>
+                </div>
+                <div class="friends-content">
+                    <div class="friend-requests">
+                        <h4>Friend Requests</h4>
+                        <div id="friend-requests-list"></div>
+                    </div>
+                    <div class="friends-list">
+                        <h4>Your Friends</h4>
+                        <div id="friends-list"></div>
                     </div>
                 </div>
             </div>
