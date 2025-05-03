@@ -609,6 +609,7 @@ function showWinPopup(winnings) {
             transform: translateY(-50%);
             width: 300px;
             z-index: 1000;
+            margin-right: 20px;
         }
         .popup-content {
             background: rgba(26, 26, 46, 0.95);
@@ -620,6 +621,7 @@ function showWinPopup(winnings) {
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         }
         .popup-content h2 {
             color: #2ecc71;
