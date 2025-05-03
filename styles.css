@@ -205,7 +205,7 @@ body {
 }
 
 .mine-cell.revealed::after {
-    content: '✓';
+    content: '💰';
     font-size: 1.5rem;
     position: absolute;
     top: 50%;

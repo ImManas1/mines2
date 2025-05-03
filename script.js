@@ -605,24 +605,26 @@ function showWinPopup(winnings) {
         .popup-container {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
+            right: 0;
+            width: 300px;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .popup-content {
             background: #1a1a2e;
             padding: 2rem;
             border-radius: 20px;
             text-align: center;
-            max-width: 400px;
-            width: 90%;
+            width: 100%;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .popup-content h2 {
             color: #2ecc71;
@@ -662,6 +664,7 @@ function showWinPopup(winnings) {
             transition: all 0.3s ease;
             font-weight: 500;
             box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            width: 100%;
         }
         .popup-content button:hover {
             transform: translateY(-2px);
