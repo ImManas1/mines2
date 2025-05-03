@@ -10,9 +10,183 @@ let gameState = {
     mineCount: 1
 };
 
-// Add to the top of the file with other state variables
+// Friends system (Commented out for future use)
+/*
 let friendRequests = JSON.parse(localStorage.getItem('friendRequests')) || [];
 let friends = JSON.parse(localStorage.getItem('friends')) || {};
+
+function searchFriends() {
+    const searchInput = document.getElementById('friend-search');
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    if (!searchTerm) {
+        const existingResults = document.querySelector('.search-results');
+        if (existingResults) {
+            existingResults.remove();
+        }
+        return;
+    }
+    
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    const results = users.filter(user => 
+        user.username.toLowerCase().includes(searchTerm) && 
+        user.username !== currentUser?.username &&
+        !friends[currentUser?.username]?.includes(user.username)
+    );
+    
+    const existingResults = document.querySelector('.search-results');
+    if (existingResults) {
+        existingResults.remove();
+    }
+    
+    const searchResults = document.createElement('div');
+    searchResults.className = 'search-results';
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
+    } else {
+        results.forEach(user => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'search-result-item';
+            resultItem.innerHTML = `
+                <div>${user.username}</div>
+                <button class="add-friend-btn" onclick="sendFriendRequest('${user.username}')">Add Friend</button>
+            `;
+            searchResults.appendChild(resultItem);
+        });
+    }
+    
+    searchInput.parentNode.appendChild(searchResults);
+}
+
+function sendFriendRequest(username) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const existingRequest = friendRequests.find(
+        request => request.from === currentUser.username && request.to === username
+    );
+    
+    if (existingRequest) {
+        alert('Friend request already sent');
+        return;
+    }
+    
+    const request = {
+        from: currentUser.username,
+        to: username,
+        timestamp: new Date().toISOString()
+    };
+    
+    friendRequests.push(request);
+    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
+    
+    const searchResults = document.querySelector('.search-results');
+    if (searchResults) {
+        searchResults.remove();
+    }
+    
+    document.getElementById('friend-search').value = '';
+    
+    updateFriendRequests();
+    alert('Friend request sent successfully!');
+}
+
+function updateFriendRequests() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const requestsList = document.getElementById('friend-requests-list');
+    if (!requestsList) return;
+    
+    requestsList.innerHTML = '';
+    
+    const userRequests = friendRequests.filter(request => request.to === currentUser.username);
+    
+    if (userRequests.length === 0) {
+        requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
+        return;
+    }
+    
+    userRequests.forEach(request => {
+        const requestItem = document.createElement('div');
+        requestItem.className = 'friend-request-item';
+        requestItem.innerHTML = `
+            <div>${request.from}</div>
+            <div class="friend-request-actions">
+                <button class="accept-request" onclick="handleFriendRequest('${request.from}', true)">Accept</button>
+                <button class="reject-request" onclick="handleFriendRequest('${request.from}', false)">Reject</button>
+            </div>
+        `;
+        requestsList.appendChild(requestItem);
+    });
+}
+
+function handleFriendRequest(username, accept) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    friendRequests = friendRequests.filter(request => 
+        !(request.from === username && request.to === currentUser.username)
+    );
+    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
+    
+    if (accept) {
+        if (!friends[currentUser.username]) {
+            friends[currentUser.username] = [];
+        }
+        if (!friends[username]) {
+            friends[username] = [];
+        }
+        
+        if (!friends[currentUser.username].includes(username)) {
+            friends[currentUser.username].push(username);
+        }
+        if (!friends[username].includes(currentUser.username)) {
+            friends[username].push(currentUser.username);
+        }
+        
+        localStorage.setItem('friends', JSON.stringify(friends));
+        alert(`You are now friends with ${username}!`);
+    } else {
+        alert(`Friend request from ${username} rejected`);
+    }
+    
+    updateFriendRequests();
+    updateFriendsList();
+}
+
+function updateFriendsList() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) return;
+    
+    const friendsList = document.getElementById('friends-list');
+    if (!friendsList) return;
+    
+    friendsList.innerHTML = '';
+    
+    const userFriends = friends[currentUser.username] || [];
+    
+    if (userFriends.length === 0) {
+        friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
+        return;
+    }
+    
+    userFriends.forEach(friend => {
+        const friendItem = document.createElement('div');
+        friendItem.className = 'friend-item';
+        friendItem.innerHTML = `
+            <div>${friend}</div>
+            <div class="friend-status ${friend === currentUser.username ? 'online' : 'offline'}">
+                ${friend === currentUser.username ? 'Online' : 'Offline'}
+            </div>
+        `;
+        friendsList.appendChild(friendItem);
+    });
+}
+*/
 
 // Initialize the game
 document.addEventListener('DOMContentLoaded', () => {
@@ -128,9 +302,11 @@ function showGameSection() {
     updateTransactionHistory();
     initializeGameBoard();
     
-    // Initialize friend system
+    // Friends system initialization (Commented out for future use)
+    /*
     updateFriendRequests();
     updateFriendsList();
+    */
 }
 
 function showAuthSection() {
@@ -780,198 +956,20 @@ balanceStyle.textContent = `
 `;
 document.head.appendChild(balanceStyle);
 
-// Add these functions after the existing functions
-function searchFriends() {
-    const searchInput = document.getElementById('friend-search');
-    const searchTerm = searchInput.value.toLowerCase();
-    
-    if (!searchTerm) {
-        const existingResults = document.querySelector('.search-results');
-        if (existingResults) {
-            existingResults.remove();
-        }
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    const results = users.filter(user => 
-        user.username.toLowerCase().includes(searchTerm) && 
-        user.username !== currentUser?.username &&
-        !friends[currentUser?.username]?.includes(user.username)
-    );
-    
-    // Remove existing results if any
-    const existingResults = document.querySelector('.search-results');
-    if (existingResults) {
-        existingResults.remove();
-    }
-    
-    const searchResults = document.createElement('div');
-    searchResults.className = 'search-results';
-    
-    if (results.length === 0) {
-        searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
-    } else {
-        results.forEach(user => {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'search-result-item';
-            resultItem.innerHTML = `
-                <div>${user.username}</div>
-                <button class="add-friend-btn" onclick="sendFriendRequest('${user.username}')">Add Friend</button>
-            `;
-            searchResults.appendChild(resultItem);
-        });
-    }
-    
-    searchInput.parentNode.appendChild(searchResults);
-}
-
-function sendFriendRequest(username) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    // Check if request already exists
-    const existingRequest = friendRequests.find(
-        request => request.from === currentUser.username && request.to === username
-    );
-    
-    if (existingRequest) {
-        alert('Friend request already sent');
-        return;
-    }
-    
-    const request = {
-        from: currentUser.username,
-        to: username,
-        timestamp: new Date().toISOString()
-    };
-    
-    friendRequests.push(request);
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    // Remove search results
-    const searchResults = document.querySelector('.search-results');
-    if (searchResults) {
-        searchResults.remove();
-    }
-    
-    // Clear search input
-    document.getElementById('friend-search').value = '';
-    
-    updateFriendRequests();
-    alert('Friend request sent successfully!');
-}
-
-function updateFriendRequests() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const requestsList = document.getElementById('friend-requests-list');
-    if (!requestsList) return;
-    
-    requestsList.innerHTML = '';
-    
-    const userRequests = friendRequests.filter(request => request.to === currentUser.username);
-    
-    if (userRequests.length === 0) {
-        requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
-        return;
-    }
-    
-    userRequests.forEach(request => {
-        const requestItem = document.createElement('div');
-        requestItem.className = 'friend-request-item';
-        requestItem.innerHTML = `
-            <div>${request.from}</div>
-            <div class="friend-request-actions">
-                <button class="accept-request" onclick="handleFriendRequest('${request.from}', true)">Accept</button>
-                <button class="reject-request" onclick="handleFriendRequest('${request.from}', false)">Reject</button>
-            </div>
-        `;
-        requestsList.appendChild(requestItem);
-    });
-}
-
-function handleFriendRequest(username, accept) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    // Remove the request
-    friendRequests = friendRequests.filter(request => 
-        !(request.from === username && request.to === currentUser.username)
-    );
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    if (accept) {
-        // Add to friends list
-        if (!friends[currentUser.username]) {
-            friends[currentUser.username] = [];
-        }
-        if (!friends[username]) {
-            friends[username] = [];
-        }
-        
-        if (!friends[currentUser.username].includes(username)) {
-            friends[currentUser.username].push(username);
-        }
-        if (!friends[username].includes(currentUser.username)) {
-            friends[username].push(currentUser.username);
-        }
-        
-        localStorage.setItem('friends', JSON.stringify(friends));
-        alert(`You are now friends with ${username}!`);
-    } else {
-        alert(`Friend request from ${username} rejected`);
-    }
-    
-    updateFriendRequests();
-    updateFriendsList();
-}
-
-function updateFriendsList() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const friendsList = document.getElementById('friends-list');
-    if (!friendsList) return;
-    
-    friendsList.innerHTML = '';
-    
-    const userFriends = friends[currentUser.username] || [];
-    
-    if (userFriends.length === 0) {
-        friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
-        return;
-    }
-    
-    userFriends.forEach(friend => {
-        const friendItem = document.createElement('div');
-        friendItem.className = 'friend-item';
-        friendItem.innerHTML = `
-            <div>${friend}</div>
-            <div class="friend-status ${friend === currentUser.username ? 'online' : 'offline'}">
-                ${friend === currentUser.username ? 'Online' : 'Offline'}
-            </div>
-        `;
-        friendsList.appendChild(friendItem);
-    });
-}
-
-// Add to the initializeGame function
+// Update the initializeGame function
 function initializeGame() {
     // ... existing initialization code ...
     
-    // Initialize friend system
+    // Friends system initialization (Commented out for future use)
+    /*
     updateFriendRequests();
     updateFriendsList();
     
-    // Add event listener for friend search
     const searchInput = document.getElementById('friend-search');
     if (searchInput) {
         searchInput.addEventListener('input', searchFriends);
     }
+    */
 }
 
 // Update the handleLogin function
@@ -992,9 +990,11 @@ function handleLogin() {
         localStorage.setItem('currentUser', JSON.stringify(user));
         showGameSection();
         
-        // Update friend lists after login
+        // Friends system update (Commented out for future use)
+        /*
         updateFriendRequests();
         updateFriendsList();
+        */
     } else {
         alert('Invalid credentials');
     }
