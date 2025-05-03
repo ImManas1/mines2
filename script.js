@@ -604,20 +604,14 @@ function showWinPopup(winnings) {
     style.textContent = `
         .popup-container {
             position: fixed;
-            top: 0;
-            right: 0;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
             width: 300px;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             z-index: 1000;
-            padding: 20px;
-            box-sizing: border-box;
         }
         .popup-content {
-            background: #1a1a2e;
+            background: rgba(26, 26, 46, 0.95);
             padding: 2rem;
             border-radius: 20px;
             text-align: center;
@@ -625,6 +619,7 @@ function showWinPopup(winnings) {
             position: relative;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
         .popup-content h2 {
             color: #2ecc71;
