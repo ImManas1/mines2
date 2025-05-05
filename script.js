@@ -339,7 +339,7 @@ function handleCellClick(index) {
         alert('Please place a bet first');
         return;
     }
-    
+
     const cell = document.querySelector(`.mine-cell[data-index="${index}"]`);
     
     if (cell.classList.contains('revealed')) {
@@ -350,19 +350,25 @@ function handleCellClick(index) {
         // Hit a mine
         cell.classList.add('mine');
         gameState.gameActive = false;
-        currentUser.balance -= gameState.currentBet;
-        addTransaction('Loss', -gameState.currentBet);
-        updateBalance();
-        updateGameStats();
-        
-        // Show loss popup
         showLossPopup();
     } else {
         // Safe cell
         cell.classList.add('revealed');
         gameState.revealedCells++;
         
+        // Update multiplier and stats
         updateGameStats();
+        
+        // Check if all safe cells are revealed
+        const totalSafeCells = 25 - gameState.mines.length;
+        if (gameState.revealedCells === totalSafeCells) {
+            // All safe cells revealed - automatic win
+            const winnings = gameState.currentBet * gameState.multiplier;
+            showWinPopup(winnings);
+            currentUser.balance += winnings;
+            updateBalance();
+            gameState.gameActive = false;
+        }
     }
 }
 
@@ -381,18 +387,25 @@ function showLossPopup() {
     resetGame();
 }
 
+function showWinPopup(winnings) {
+    const popup = document.createElement('div');
+    popup.className = 'mobile-popup';
+    popup.innerHTML = `
+        <div class="popup-content">
+            <h2>Congratulations!</h2>
+            <p>You won $${winnings.toFixed(2)}!</p>
+            <button onclick="closePopup()" class="mobile-popup-btn">OK</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+    resetGame();
+}
+
 function resetGame() {
-    // Remove popup
-    const popup = document.querySelector('.mobile-popup');
-    if (popup) {
-        popup.remove();
-    }
-    
-    // Reset game state
-    gameState.currentBet = 0;
-    gameState.multiplier = 1.00;
-    gameState.revealedCells = 0;
     gameState.gameActive = false;
+    gameState.currentBet = 0;
+    gameState.revealedCells = 0;
+    gameState.multiplier = 1.00;
     gameState.mines = [];
     
     // Reset board
@@ -401,9 +414,10 @@ function resetGame() {
         cell.classList.remove('revealed', 'mine');
     });
     
-    // Update stats
+    // Update UI
     updateGameStats();
     updatePreGameStats();
+    document.getElementById('cashout-btn').disabled = true;
 }
 
 async function handleCashout() {
@@ -416,22 +430,6 @@ async function handleCashout() {
     } catch (error) {
         alert(error.message);
     }
-}
-
-function showWinPopup(winnings) {
-    const popup = document.createElement('div');
-    popup.className = 'mobile-popup';
-    popup.innerHTML = `
-        <div class="popup-content">
-            <h2>Congratulations!</h2>
-            <p>You won $${winnings}!</p>
-            <div class="popup-buttons">
-                <button onclick="handleCashout()" class="mobile-popup-btn">Cashout</button>
-                <button onclick="closePopup()" class="mobile-popup-btn">Continue</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(popup);
 }
 
 function animateBalanceIncrease(amount) {
