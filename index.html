@@ -45,73 +45,71 @@
             </div>
 
             <div class="game-container">
-                <div class="game-header">
-                    <div class="user-info">
-                        <span id="username-display"></span>
-                        <span id="balance-display"></span>
-                    </div>
-                    <div class="game-controls">
-                        <input type="number" id="bet-amount" placeholder="Bet amount" min="1">
-                        <button onclick="handleBet()">Place Bet</button>
-                        <button id="cashout-btn" onclick="handleCashout()" disabled>Cashout</button>
-                    </div>
+                <div class="game-board" id="game-board">
+                    <!-- Mines grid will be generated here -->
                 </div>
-
-                <div class="friends-section">
-                    <div class="friends-header">
-                        <h3>Friends</h3>
-                        <div class="friend-search">
-                            <input type="text" id="friend-search" placeholder="Search for friends...">
-                            <button onclick="searchFriends()">Search</button>
+                <div class="game-controls">
+                    <div class="game-settings">
+                        <div class="setting-group">
+                            <label for="mine-count">Number of Mines:</label>
+                            <select id="mine-count" onchange="updateMineCount()">
+                                <option value="1">1 Mine</option>
+                                <option value="2">2 Mines</option>
+                                <option value="5">5 Mines</option>
+                                <option value="7">7 Mines</option>
+                                <option value="9">9 Mines</option>
+                                <option value="10">10 Mines</option>
+                                <option value="15">15 Mines</option>
+                                <option value="20">20 Mines</option>
+                                <option value="24">24 Mines</option>
+                            </select>
                         </div>
                     </div>
-                    
-                    <div class="friends-content">
-                        <div class="friend-requests">
-                            <h4>Friend Requests</h4>
-                            <div id="friend-requests-list"></div>
-                        </div>
-                        
-                        <div class="friends-list">
-                            <h4>Your Friends</h4>
-                            <div id="friends-list"></div>
-                        </div>
+                    <div class="bet-controls">
+                        <input type="number" id="bet-amount" placeholder="Enter bet amount" min="1">
+                        <button onclick="placeBet()">Place Bet</button>
+                    </div>
+                    <div class="game-stats">
+                        <div id="current-bet">Current Bet: $0</div>
+                        <div id="multiplier">Base Multiplier: 1.00x</div>
+                        <div id="probability">Probability: 4.00%</div>
+                        <div id="potential-win">Potential Win: $0</div>
+                        <button id="cashout-btn" onclick="cashout()" disabled>Cashout</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="game-board" id="game-board"></div>
-                
-                <div class="game-stats">
-                    <div class="stat-item">
-                        <span>Mine Count:</span>
-                        <input type="number" id="mine-count" value="1" min="1" max="24" onchange="updateMineCount()">
-                    </div>
-                    <div class="stat-item">
-                        <span>Probability:</span>
-                        <span id="probability"></span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Multiplier:</span>
-                        <span id="multiplier"></span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Current Bet:</span>
-                        <span id="current-bet"></span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Potential Win:</span>
-                        <span id="potential-win"></span>
+            <div class="friends-section">
+                <div class="friends-header">
+                    <h3>Friends</h3>
+                    <div class="friend-search">
+                        <input type="text" id="friend-search" placeholder="Search for friends...">
+                        <button onclick="searchFriends()">Search</button>
                     </div>
                 </div>
-
-                <div class="leaderboard">
-                    <h3>Leaderboard</h3>
-                    <div id="leaderboard"></div>
+                <div class="friends-content">
+                    <div class="friend-requests">
+                        <h4>Friend Requests</h4>
+                        <div id="friend-requests-list"></div>
+                    </div>
+                    <div class="friends-list">
+                        <h4>Your Friends</h4>
+                        <div id="friends-list"></div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="transaction-history">
-                    <h3>Transaction History</h3>
-                    <div id="transaction-list"></div>
+            <div class="leaderboard">
+                <h3>Leaderboard</h3>
+                <div id="leaderboard-list">
+                    <!-- Leaderboard entries will be added here -->
+                </div>
+            </div>
+
+            <div class="transaction-history">
+                <h3>Transaction History</h3>
+                <div id="transaction-list">
+                    <!-- Transaction history will be added here -->
                 </div>
             </div>
         </div>
