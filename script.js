@@ -398,7 +398,6 @@ function showWinPopup(winnings) {
         </div>
     `;
     document.body.appendChild(popup);
-    resetGame();
 }
 
 function resetGame() {
@@ -420,15 +419,31 @@ function resetGame() {
     document.getElementById('cashout-btn').disabled = true;
 }
 
-async function handleCashout() {
+function cashout() {
+    if (!gameState.gameActive) {
+        alert('No active game to cashout');
+        return;
+    }
+
     try {
-        const winnings = calculateWinnings();
-        await updateGameState('win', winnings);
+        // Calculate winnings
+        const winnings = gameState.currentBet * gameState.multiplier;
+        
+        // Add winnings to balance
+        currentUser.balance += winnings;
+        
+        // Update balance display
+        updateBalance();
+        
+        // Show win popup
         showWinPopup(winnings);
-        animateBalanceIncrease(winnings);
-        resetBoard();
+        
+        // Reset game
+        resetGame();
+        
     } catch (error) {
-        alert(error.message);
+        console.error('Error during cashout:', error);
+        alert('An error occurred during cashout');
     }
 }
 
