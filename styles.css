@@ -207,7 +207,7 @@
     }
 
     .mine-cell.revealed::after {
-        content: '✓';
+        content: '💰';
         font-size: 1.5rem;
         position: absolute;
         top: 50%;
@@ -215,6 +215,13 @@
         transform: translate(-50%, -50%);
         color: white;
         text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        animation: moneyReveal 0.5s ease-out;
+    }
+
+    @keyframes moneyReveal {
+        0% { transform: translate(-50%, -50%) scale(0); }
+        50% { transform: translate(-50%, -50%) scale(1.2); }
+        100% { transform: translate(-50%, -50%) scale(1); }
     }
 
     .mine-cell.mine {
