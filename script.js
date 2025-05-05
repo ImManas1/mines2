@@ -242,25 +242,41 @@ function calculatePreGameProbability() {
 }
 
 function calculatePreGameMultiplier() {
-    // Base multiplier calculation based on mine count
-    const totalCells = 25; // Fixed 5x5 grid
-    const safeCells = totalCells - gameState.mineCount;
+    const totalCells = 25; // 5x5 grid
+    const mineCount = parseInt(document.getElementById('mine-count').value);
+    const safeCells = totalCells - mineCount;
     
-    // More balanced multiplier formula that properly scales with risk
-    // The multiplier increases exponentially with the ratio of mines to safe cells
-    const mineRatio = gameState.mineCount / totalCells;
-    const safeRatio = safeCells / totalCells;
-    
-    // Base multiplier calculation that ensures higher risk = higher reward
+    // Base multiplier calculation that increases exponentially with risk
     // The formula ensures that:
     // 1. More mines = higher multiplier
     // 2. The increase is exponential but controlled
     // 3. The multiplier is always greater than 1
-    const baseMultiplier = 1 + (mineRatio * 2) + (Math.pow(mineRatio, 2) * 3);
+    const baseMultiplier = 1 + (mineCount * 0.2) + (Math.pow(mineCount, 1.5) * 0.05);
     
     // Ensure the multiplier is reasonable and capped
     const maxMultiplier = 10; // Cap the maximum multiplier
     return Math.min(baseMultiplier, maxMultiplier).toFixed(2);
+}
+
+function calculateMultiplier() {
+    const totalCells = 25; // 5x5 grid
+    const mineCount = gameState.mines.length;
+    const safeCells = totalCells - mineCount;
+    const revealedCells = gameState.revealedCells;
+    
+    // Base multiplier calculation
+    const baseMultiplier = 1 + (mineCount * 0.2) + (Math.pow(mineCount, 1.5) * 0.05);
+    
+    // Increase multiplier based on revealed cells
+    // The more cells revealed, the higher the risk, so higher multiplier
+    const cellMultiplier = revealedCells * (0.1 + (mineCount * 0.02));
+    
+    // Calculate final multiplier
+    const finalMultiplier = baseMultiplier + cellMultiplier;
+    
+    // Cap the maximum multiplier
+    const maxMultiplier = 10;
+    return Math.min(finalMultiplier, maxMultiplier).toFixed(2);
 }
 
 function updatePreGameStats() {
@@ -283,10 +299,16 @@ function calculatePotentialWin() {
 }
 
 function updateGameStats() {
+    if (gameState.gameActive) {
+        gameState.multiplier = calculateMultiplier();
+    } else {
+        gameState.multiplier = calculatePreGameMultiplier();
+    }
+    
     document.getElementById('current-bet').textContent = `Current Bet: $${gameState.currentBet}`;
     document.getElementById('multiplier').textContent = `Multiplier: ${gameState.multiplier}x`;
     document.getElementById('probability').textContent = `Probability: ${calculateProbability()}%`;
-    document.getElementById('potential-win').textContent = `Potential Win: $${calculatePotentialWin()}`;
+    document.getElementById('potential-win').textContent = `Potential Win: $${(gameState.currentBet * gameState.multiplier).toFixed(2)}`;
     
     // Enable/disable cashout button
     const cashoutBtn = document.getElementById('cashout-btn');
@@ -349,11 +371,6 @@ function handleCellClick(index) {
         // Safe cell
         cell.classList.add('revealed');
         gameState.revealedCells++;
-        
-        // New multiplier calculation that increases more with each revealed cell
-        const baseMultiplier = 1 + (gameState.mineCount * 0.2) + (Math.pow(gameState.mineCount, 1.5) * 0.05);
-        const cellMultiplier = gameState.revealedCells * (0.1 + (gameState.mineCount * 0.02));
-        gameState.multiplier = (baseMultiplier + cellMultiplier).toFixed(2);
         
         updateGameStats();
     }
@@ -665,4 +682,60 @@ function setupMobileGestures() {
             }
         }
     }, { passive: false });
+}
+
+function placeBet() {
+    const betAmount = parseFloat(document.getElementById('bet-amount').value);
+    
+    if (isNaN(betAmount) || betAmount <= 0) {
+        alert('Please enter a valid bet amount');
+        return;
+    }
+    
+    if (betAmount > currentUser.balance) {
+        alert('Insufficient balance');
+        return;
+    }
+    
+    if (gameState.gameActive) {
+        alert('Game is already in progress');
+        return;
+    }
+    
+    try {
+        // Deduct bet amount from balance
+        currentUser.balance -= betAmount;
+        gameState.currentBet = betAmount;
+        gameState.gameActive = true;
+        gameState.revealedCells = 0;
+        gameState.multiplier = 1.00;
+        
+        // Initialize mines
+        const totalCells = 25; // 5x5 grid
+        gameState.mines = [];
+        const mineCount = parseInt(document.getElementById('mine-count').value);
+        
+        // Generate random mine positions
+        while (gameState.mines.length < mineCount) {
+            const randomIndex = Math.floor(Math.random() * totalCells);
+            if (!gameState.mines.includes(randomIndex)) {
+                gameState.mines.push(randomIndex);
+            }
+        }
+        
+        // Update UI
+        updateBalance();
+        updateGameStats();
+        document.getElementById('cashout-btn').disabled = false;
+        
+        // Reset board
+        const cells = document.querySelectorAll('.mine-cell');
+        cells.forEach(cell => {
+            cell.classList.remove('revealed', 'mine');
+        });
+        
+    } catch (error) {
+        console.error('Error placing bet:', error);
+        alert('An error occurred while placing your bet');
+    }
 } 
