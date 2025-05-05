@@ -51,43 +51,95 @@ function setupAuthTabs() {
 }
 
 function checkLoginStatus() {
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (user) {
-        currentUser = user;
-        showGameSection();
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
+    
+    if (storedUser && storedToken) {
+        try {
+            currentUser = JSON.parse(storedUser);
+            authToken = storedToken;
+            showGameSection();
+            return true;
+        } catch (error) {
+            console.error('Error parsing stored user:', error);
+            logout();
+            return false;
+        }
     }
+    return false;
 }
 
 // Authentication Functions
 async function register(username, password) {
+    if (!username || !password) {
+        throw new Error('Username and password are required');
+    }
+    
+    if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+    }
+    
     try {
         const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
+        if (!response.ok) {
+            throw new Error(data.error || 'Registration failed');
+        }
+        
+        // Store user data and token
+        currentUser = data.user;
+        authToken = data.token;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('authToken', authToken);
+        
         return data;
     } catch (error) {
+        console.error('Registration error:', error);
         throw error;
     }
 }
 
 async function login(username, password) {
+    if (!username || !password) {
+        throw new Error('Username and password are required');
+    }
+    
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
+        if (!response.ok) {
+            throw new Error(data.error || 'Login failed');
+        }
+        
+        // Store user data and token
+        currentUser = data.user;
         authToken = data.token;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('authToken', authToken);
+        
         return data;
     } catch (error) {
+        console.error('Login error:', error);
         throw error;
     }
+}
+
+function logout() {
+    currentUser = null;
+    authToken = null;
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
+    showAuthSection();
 }
 
 // Game State Management
@@ -826,17 +878,56 @@ function debounce(func, wait) {
 // Update handleLogin function
 async function handleLogin(event) {
     event.preventDefault();
-    const username = document.getElementById('login-username').value;
+    const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
-
+    
     try {
         await login(username, password);
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('game-section').classList.remove('hidden');
+        showGameSection();
         await initializeGame();
     } catch (error) {
-        alert(error.message);
+        showError(error.message);
     }
+}
+
+// Add handleRegister function
+async function handleRegister(event) {
+    event.preventDefault();
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+    }
+    
+    try {
+        await register(username, password);
+        showGameSection();
+        await initializeGame();
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    
+    const authForm = document.querySelector('.auth-form');
+    const existingError = authForm.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    authForm.insertBefore(errorDiv, authForm.firstChild);
+    
+    // Auto-remove error after 5 seconds
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
 }
 
 // Mobile gesture setup
