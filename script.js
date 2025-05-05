@@ -1,5 +1,4 @@
 // Game state
-
 let currentUser = null;
 let gameState = {
     balance: 1000,
@@ -17,7 +16,7 @@ let touchStartY = 0;
 let lastTouchTime = 0;
 
 // API Configuration
-const API_BASE_URL = 'https://mines-ez7j.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 let authToken = null;
 
 // Initialize the game
@@ -171,77 +170,6 @@ async function handleApiError(error) {
     }
 }
 
-// Friend System
-async function searchUsers(query) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/search?query=${query}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to search users');
-        }
-        return await response.json();
-    } catch (error) {
-        handleApiError(error);
-        throw error;
-    }
-}
-
-async function sendFriendRequest(userId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/friends/request`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ userId })
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to send friend request');
-        }
-        const data = await response.json();
-        alert('Friend request sent successfully!');
-        return data;
-    } catch (error) {
-        handleApiError(error);
-        throw error;
-    }
-}
-
-async function handleFriendRequest(requestId, action) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/friends/request/${requestId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ action })
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to process friend request');
-        }
-        const data = await response.json();
-        
-        if (action === 'accept') {
-            alert('Friend request accepted!');
-        } else {
-            alert('Friend request rejected.');
-        }
-        
-        await updateFriendRequests();
-        await updateFriendsList();
-        return data;
-    } catch (error) {
-        handleApiError(error);
-        throw error;
-    }
-}
-
 // Leaderboard
 async function getLeaderboard() {
     try {
@@ -257,9 +185,24 @@ async function getLeaderboard() {
 function showGameSection() {
     document.getElementById('auth-section').classList.add('hidden');
     document.getElementById('game-section').classList.remove('hidden');
+    
+    // Update user info
     document.getElementById('username-display').textContent = currentUser.username;
-    updateBalance();
-    updateLeaderboard();
+    document.getElementById('balance-display').textContent = `Balance: $${currentUser.balance.toFixed(2)}`;
+    
+    // Initialize game state
+    gameState = {
+        balance: currentUser.balance,
+        currentBet: 0,
+        multiplier: 1.00,
+        revealedCells: 0,
+        gameActive: false,
+        mines: [],
+        mineCount: 1
+    };
+    
+    // Update UI
+    updatePreGameStats();
     updateTransactionHistory();
     initializeGameBoard();
 }
@@ -596,270 +539,12 @@ async function updateLeaderboard() {
     }
 }
 
-// Update the leaderboard styles
-const style = document.createElement('style');
-style.textContent = `
-    .leaderboard-header {
-        display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-        color: rgba(255, 255, 255, 0.8);
-    }
-    
-    .leaderboard-entry {
-        display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .leaderboard-entry.current-user {
-        background: rgba(76, 175, 80, 0.2);
-        border: 1px solid rgba(76, 175, 80, 0.3);
-    }
-    
-    .leaderboard-entry .rank {
-        font-weight: bold;
-        min-width: 3rem;
-    }
-    
-    .leaderboard-entry .username {
-        font-weight: 500;
-    }
-    
-    .leaderboard-entry .status {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
-        min-width: 6rem;
-        text-align: center;
-    }
-    
-    .leaderboard-entry .balance {
-        font-weight: bold;
-        color: #4CAF50;
-        min-width: 8rem;
-        text-align: right;
-    }
-    
-    .leaderboard-entry:hover {
-        transform: translateX(5px);
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    #leaderboard-list {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-`;
-document.head.appendChild(style);
-
-// Add bloom effect styles for balance display
-const balanceStyle = document.createElement('style');
-balanceStyle.textContent = `
-    .balance-bloom {
-        position: relative;
-        animation: balancePulse 0.5s ease-in-out;
-    }
-    
-    .balance-bloom::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(46, 204, 113, 0.5) 0%, rgba(46, 204, 113, 0) 70%);
-        border-radius: 50%;
-        animation: balanceBloom 0.5s ease-in-out;
-    }
-    
-    @keyframes balancePulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-    
-    @keyframes balanceBloom {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-        100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-    }
-`;
-document.head.appendChild(balanceStyle);
-
-// Friends System
-async function searchFriends() {
-    const searchInput = document.getElementById('friend-search');
-    const query = searchInput.value.trim();
-    
-    if (!query) {
-        const existingResults = document.querySelector('.search-results');
-        if (existingResults) {
-            existingResults.remove();
-        }
-        return;
-    }
-
-    try {
-        const users = await searchUsers(query);
-        const existingResults = document.querySelector('.search-results');
-        if (existingResults) {
-            existingResults.remove();
-        }
-
-        const searchResults = document.createElement('div');
-        searchResults.className = 'search-results';
-
-        if (users.length === 0) {
-            searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
-        } else {
-            users.forEach(user => {
-                // Skip current user from search results
-                if (user._id === currentUser._id) return;
-                
-                const resultItem = document.createElement('div');
-                resultItem.className = 'search-result-item';
-                resultItem.innerHTML = `
-                    <div>${user.username}</div>
-                    <button class="add-friend-btn" onclick="sendFriendRequest('${user._id}')">Add Friend</button>
-                `;
-                searchResults.appendChild(resultItem);
-            });
-        }
-
-        const searchContainer = searchInput.parentNode;
-        searchContainer.appendChild(searchResults);
-
-        // Close search results when clicking outside
-        document.addEventListener('click', function closeResults(e) {
-            if (!searchContainer.contains(e.target)) {
-                searchResults.remove();
-                document.removeEventListener('click', closeResults);
-            }
-        });
-    } catch (error) {
-        console.error('Failed to search users:', error);
-        alert('Failed to search users. Please try again.');
-    }
-}
-
-async function updateFriendRequests() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch friend requests');
-        }
-        const user = await response.json();
-        
-        const requestsList = document.getElementById('friend-requests-list');
-        requestsList.innerHTML = '';
-
-        if (user.friendRequests.length === 0) {
-            requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
-            return;
-        }
-
-        user.friendRequests.forEach(request => {
-            if (request.status === 'pending') {
-                const requestItem = document.createElement('div');
-                requestItem.className = 'friend-request-item';
-                requestItem.innerHTML = `
-                    <div>${request.from.username}</div>
-                    <div class="friend-request-actions">
-                        <button class="accept-request" onclick="handleFriendRequest('${request._id}', 'accept')">Accept</button>
-                        <button class="reject-request" onclick="handleFriendRequest('${request._id}', 'reject')">Reject</button>
-                    </div>
-                `;
-                requestsList.appendChild(requestItem);
-            }
-        });
-    } catch (error) {
-        handleApiError(error);
-    }
-}
-
-async function updateFriendsList() {
-    try {
-        const response = await fetch(`https://mines-ez7j.onrender.com/profile`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch friends list');
-        }
-        const user = await response.json();
-        
-        const friendsList = document.getElementById('friends-list');
-        friendsList.innerHTML = '';
-
-        if (user.friends.length === 0) {
-            friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
-            return;
-        }
-
-        user.friends.forEach(friend => {
-            const friendItem = document.createElement('div');
-            friendItem.className = 'friend-item';
-            friendItem.innerHTML = `
-                <div>${friend.username}</div>
-                <div class="friend-status ${friend.online ? 'online' : 'offline'}">
-                    ${friend.online ? 'Online' : 'Offline'}
-                </div>
-            `;
-            friendsList.appendChild(friendItem);
-        });
-    } catch (error) {
-        handleApiError(error);
-    }
-}
-
 // Update initializeGame function
 async function initializeGame() {
     updatePreGameStats();
     updateTransactionHistory();
     initializeGameBoard();
-    
-    // Initialize friends system
-    const searchInput = document.getElementById('friend-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(searchFriends, 300));
-    }
-    
-    await updateFriendRequests();
-    await updateFriendsList();
+    await updateLeaderboard();
 }
 
 // Add debounce utility function
@@ -883,8 +568,8 @@ async function handleLogin(event) {
     
     try {
         await login(username, password);
-        showGameSection();
         await initializeGame();
+        showGameSection();
     } catch (error) {
         showError(error.message);
     }
@@ -904,8 +589,8 @@ async function handleRegister(event) {
     
     try {
         await register(username, password);
-        showGameSection();
         await initializeGame();
+        showGameSection();
     } catch (error) {
         showError(error.message);
     }
