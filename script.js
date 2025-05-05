@@ -10,183 +10,14 @@ let gameState = {
     mineCount: 1
 };
 
-// Friends system (Commented out for future use)
-/*
-let friendRequests = JSON.parse(localStorage.getItem('friendRequests')) || [];
-let friends = JSON.parse(localStorage.getItem('friends')) || {};
+// Touch state
+let touchStartX = 0;
+let touchStartY = 0;
+let lastTouchTime = 0;
 
-function searchFriends() {
-    const searchInput = document.getElementById('friend-search');
-    const searchTerm = searchInput.value.toLowerCase();
-    
-    if (!searchTerm) {
-        const existingResults = document.querySelector('.search-results');
-        if (existingResults) {
-            existingResults.remove();
-        }
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    const results = users.filter(user => 
-        user.username.toLowerCase().includes(searchTerm) && 
-        user.username !== currentUser?.username &&
-        !friends[currentUser?.username]?.includes(user.username)
-    );
-    
-    const existingResults = document.querySelector('.search-results');
-    if (existingResults) {
-        existingResults.remove();
-    }
-    
-    const searchResults = document.createElement('div');
-    searchResults.className = 'search-results';
-    
-    if (results.length === 0) {
-        searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
-    } else {
-        results.forEach(user => {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'search-result-item';
-            resultItem.innerHTML = `
-                <div>${user.username}</div>
-                <button class="add-friend-btn" onclick="sendFriendRequest('${user.username}')">Add Friend</button>
-            `;
-            searchResults.appendChild(resultItem);
-        });
-    }
-    
-    searchInput.parentNode.appendChild(searchResults);
-}
-
-function sendFriendRequest(username) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const existingRequest = friendRequests.find(
-        request => request.from === currentUser.username && request.to === username
-    );
-    
-    if (existingRequest) {
-        alert('Friend request already sent');
-        return;
-    }
-    
-    const request = {
-        from: currentUser.username,
-        to: username,
-        timestamp: new Date().toISOString()
-    };
-    
-    friendRequests.push(request);
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    const searchResults = document.querySelector('.search-results');
-    if (searchResults) {
-        searchResults.remove();
-    }
-    
-    document.getElementById('friend-search').value = '';
-    
-    updateFriendRequests();
-    alert('Friend request sent successfully!');
-}
-
-function updateFriendRequests() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const requestsList = document.getElementById('friend-requests-list');
-    if (!requestsList) return;
-    
-    requestsList.innerHTML = '';
-    
-    const userRequests = friendRequests.filter(request => request.to === currentUser.username);
-    
-    if (userRequests.length === 0) {
-        requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
-        return;
-    }
-    
-    userRequests.forEach(request => {
-        const requestItem = document.createElement('div');
-        requestItem.className = 'friend-request-item';
-        requestItem.innerHTML = `
-            <div>${request.from}</div>
-            <div class="friend-request-actions">
-                <button class="accept-request" onclick="handleFriendRequest('${request.from}', true)">Accept</button>
-                <button class="reject-request" onclick="handleFriendRequest('${request.from}', false)">Reject</button>
-            </div>
-        `;
-        requestsList.appendChild(requestItem);
-    });
-}
-
-function handleFriendRequest(username, accept) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    friendRequests = friendRequests.filter(request => 
-        !(request.from === username && request.to === currentUser.username)
-    );
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    if (accept) {
-        if (!friends[currentUser.username]) {
-            friends[currentUser.username] = [];
-        }
-        if (!friends[username]) {
-            friends[username] = [];
-        }
-        
-        if (!friends[currentUser.username].includes(username)) {
-            friends[currentUser.username].push(username);
-        }
-        if (!friends[username].includes(currentUser.username)) {
-            friends[username].push(currentUser.username);
-        }
-        
-        localStorage.setItem('friends', JSON.stringify(friends));
-        alert(`You are now friends with ${username}!`);
-    } else {
-        alert(`Friend request from ${username} rejected`);
-    }
-    
-    updateFriendRequests();
-    updateFriendsList();
-}
-
-function updateFriendsList() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const friendsList = document.getElementById('friends-list');
-    if (!friendsList) return;
-    
-    friendsList.innerHTML = '';
-    
-    const userFriends = friends[currentUser.username] || [];
-    
-    if (userFriends.length === 0) {
-        friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
-        return;
-    }
-    
-    userFriends.forEach(friend => {
-        const friendItem = document.createElement('div');
-        friendItem.className = 'friend-item';
-        friendItem.innerHTML = `
-            <div>${friend}</div>
-            <div class="friend-status ${friend === currentUser.username ? 'online' : 'offline'}">
-                ${friend === currentUser.username ? 'Online' : 'Offline'}
-            </div>
-        `;
-        friendsList.appendChild(friendItem);
-    });
-}
-*/
+// API Configuration
+const API_BASE_URL = 'http://localhost:3000/api';
+let authToken = null;
 
 // Initialize localStorage items if they don't exist
 function initializeLocalStorage() {
@@ -207,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthTabs();
     checkLoginStatus();
     updatePreGameStats();
+    setupMobileGestures();
 });
 
 // Authentication functions
@@ -232,6 +64,7 @@ function setupAuthTabs() {
 }
 
 function checkLoginStatus() {
+<<<<<<< HEAD
     try {
         const user = JSON.parse(localStorage.getItem('currentUser'));
         if (user) {
@@ -241,18 +74,33 @@ function checkLoginStatus() {
     } catch (error) {
         console.error('Error checking login status:', error);
         localStorage.removeItem('currentUser');
+=======
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
+    
+    if (storedUser && storedToken) {
+        try {
+            currentUser = JSON.parse(storedUser);
+            authToken = storedToken;
+            showGameSection();
+            return true;
+        } catch (error) {
+            console.error('Error parsing stored user:', error);
+            logout();
+            return false;
+        }
+>>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
     }
+    return false;
 }
 
-function login() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    
+// Authentication Functions
+async function register(username, password) {
     if (!username || !password) {
-        alert('Please enter both username and password');
-        return;
+        throw new Error('Username and password are required');
     }
     
+<<<<<<< HEAD
     try {
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const user = users.find(u => u.username === username && u.password === password);
@@ -267,23 +115,66 @@ function login() {
     } catch (error) {
         console.error('Error during login:', error);
         alert('An error occurred during login. Please try again.');
+=======
+    if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Registration failed');
+        }
+        
+        // Store user data and token
+        currentUser = data.user;
+        authToken = data.token;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('authToken', authToken);
+        
+        return data;
+    } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+>>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
     }
 }
 
-function register() {
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
-    const confirmPassword = document.getElementById('register-confirm-password').value;
-    
-    if (!username || !password || !confirmPassword) {
-        alert('Please fill in all fields');
-        return;
+async function login(username, password) {
+    if (!username || !password) {
+        throw new Error('Username and password are required');
     }
     
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Login failed');
+        }
+        
+        // Store user data and token
+        currentUser = data.user;
+        authToken = data.token;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('authToken', authToken);
+        
+        return data;
+    } catch (error) {
+        console.error('Login error:', error);
+        throw error;
     }
+<<<<<<< HEAD
     
     try {
         const users = JSON.parse(localStorage.getItem('users')) || [];
@@ -308,28 +199,82 @@ function register() {
         console.error('Error during registration:', error);
         alert('An error occurred during registration. Please try again.');
     }
+=======
+>>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
 }
 
 function logout() {
     currentUser = null;
+    authToken = null;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
     showAuthSection();
+}
+
+// Game State Management
+async function updateGameState(type, amount) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/game/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ type, amount })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Add error handling middleware
+async function handleApiError(error) {
+    console.error('API Error:', error);
+    if (error.message === 'Failed to fetch') {
+        alert('Cannot connect to the server. Please make sure the server is running.');
+    } else {
+        alert(error.message || 'An error occurred. Please try again.');
+    }
+}
+
+// Leaderboard
+async function getLeaderboard() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/leaderboard`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+    } catch (error) {
+        throw error;
+    }
 }
 
 function showGameSection() {
     document.getElementById('auth-section').classList.add('hidden');
     document.getElementById('game-section').classList.remove('hidden');
+    
+    // Update user info
     document.getElementById('username-display').textContent = currentUser.username;
-    updateBalance();
-    updateLeaderboard();
+    document.getElementById('balance-display').textContent = `Balance: $${currentUser.balance.toFixed(2)}`;
+    
+    // Initialize game state
+    gameState = {
+        balance: currentUser.balance,
+        currentBet: 0,
+        multiplier: 1.00,
+        revealedCells: 0,
+        gameActive: false,
+        mines: [],
+        mineCount: 1
+    };
+    
+    // Update UI
+    updatePreGameStats();
     updateTransactionHistory();
     initializeGameBoard();
-    
-    // Friends system initialization (Commented out for future use)
-    /*
-    updateFriendRequests();
-    updateFriendsList();
-    */
 }
 
 function showAuthSection() {
@@ -357,10 +302,21 @@ function calculatePreGameMultiplier() {
     const totalCells = 25; // Fixed 5x5 grid
     const safeCells = totalCells - gameState.mineCount;
     
-    // New multiplier formula: higher multiplier for more mines
-    // Base multiplier increases exponentially with mine count
-    const baseMultiplier = 1 + (gameState.mineCount * 0.2) + (Math.pow(gameState.mineCount, 1.5) * 0.05);
-    return baseMultiplier.toFixed(2);
+    // More balanced multiplier formula that properly scales with risk
+    // The multiplier increases exponentially with the ratio of mines to safe cells
+    const mineRatio = gameState.mineCount / totalCells;
+    const safeRatio = safeCells / totalCells;
+    
+    // Base multiplier calculation that ensures higher risk = higher reward
+    // The formula ensures that:
+    // 1. More mines = higher multiplier
+    // 2. The increase is exponential but controlled
+    // 3. The multiplier is always greater than 1
+    const baseMultiplier = 1 + (mineRatio * 2) + (Math.pow(mineRatio, 2) * 3);
+    
+    // Ensure the multiplier is reasonable and capped
+    const maxMultiplier = 10; // Cap the maximum multiplier
+    return Math.min(baseMultiplier, maxMultiplier).toFixed(2);
 }
 
 function updatePreGameStats() {
@@ -407,35 +363,19 @@ function initializeGameBoard() {
     }
 }
 
-function placeBet() {
-    const betAmount = parseInt(document.getElementById('bet-amount').value);
-    
-    if (betAmount <= 0 || betAmount > currentUser.balance) {
-        alert('Invalid bet amount');
+async function handleBet() {
+    const betAmount = parseFloat(document.getElementById('bet-amount').value);
+    if (isNaN(betAmount) || betAmount <= 0) {
+        alert('Please enter a valid bet amount');
         return;
     }
-    
-    gameState.currentBet = betAmount;
-    gameState.multiplier = 1.00;
-    gameState.revealedCells = 0;
-    gameState.gameActive = true;
-    
-    // Generate mines
-    gameState.mines = [];
-    while (gameState.mines.length < gameState.mineCount) {
-        const mine = Math.floor(Math.random() * 25); // Fixed 5x5 grid
-        if (!gameState.mines.includes(mine)) {
-            gameState.mines.push(mine);
-        }
+
+    try {
+        await updateGameState('bet', -betAmount);
+        startGame(betAmount);
+    } catch (error) {
+        alert(error.message);
     }
-    
-    // Reset board
-    const cells = document.querySelectorAll('.mine-cell');
-    cells.forEach(cell => {
-        cell.classList.remove('revealed', 'mine');
-    });
-    
-    updateGameStats();
 }
 
 function handleCellClick(index) {
@@ -476,79 +416,23 @@ function handleCellClick(index) {
 }
 
 function showLossPopup() {
-    // Reveal all mines
-    gameState.mines.forEach(mineIndex => {
-        const cell = document.querySelector(`.mine-cell[data-index="${mineIndex}"]`);
-        if (cell) {
-            cell.classList.add('mine');
-        }
-    });
-
-    // Create popup container
     const popup = document.createElement('div');
-    popup.className = 'popup-container';
+    popup.className = 'mobile-popup';
     popup.innerHTML = `
         <div class="popup-content">
             <h2>Game Over!</h2>
-            <p>You hit a mine and lost $${gameState.currentBet}</p>
-            <button onclick="resetGame()">Play Again</button>
+            <p>You hit a mine!</p>
+            <p>You lost $${gameState.currentBet}</p>
+            <button onclick="closePopup()" class="mobile-popup-btn">OK</button>
         </div>
     `;
-    
-    // Add popup to the body
     document.body.appendChild(popup);
-    
-    // Add styles for the popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .popup-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .popup-content {
-            background: #1a1a2e;
-            padding: 2rem;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .popup-content h2 {
-            color: #e74c3c;
-            margin-bottom: 1rem;
-        }
-        .popup-content p {
-            color: #fff;
-            margin-bottom: 1.5rem;
-        }
-        .popup-content button {
-            background: #4CAF50;
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .popup-content button:hover {
-            background: #45a049;
-        }
-    `;
-    document.head.appendChild(style);
+    resetGame();
 }
 
 function resetGame() {
     // Remove popup
-    const popup = document.querySelector('.popup-container');
+    const popup = document.querySelector('.mobile-popup');
     if (popup) {
         popup.remove();
     }
@@ -571,127 +455,32 @@ function resetGame() {
     updatePreGameStats();
 }
 
-function cashout() {
-    if (!gameState.gameActive || gameState.revealedCells === 0) {
-        return;
+async function handleCashout() {
+    try {
+        const winnings = calculateWinnings();
+        await updateGameState('win', winnings);
+        showWinPopup(winnings);
+        animateBalanceIncrease(winnings);
+        resetBoard();
+    } catch (error) {
+        alert(error.message);
     }
-    
-    const winnings = gameState.currentBet * gameState.multiplier;
-    
-    // Reveal all mines
-    gameState.mines.forEach(mineIndex => {
-        const cell = document.querySelector(`.mine-cell[data-index="${mineIndex}"]`);
-        if (cell) {
-            cell.classList.add('mine');
-        }
-    });
-    
-    // Show win popup with animation
-    showWinPopup(winnings);
-    
-    // Animate balance increase
-    animateBalanceIncrease(winnings);
-    
-    // Update balance after animation
-    setTimeout(() => {
-        currentUser.balance += winnings;
-        addTransaction('Win', winnings);
-        updateBalance();
-        
-        gameState.gameActive = false;
-        updateGameStats();
-        resetGame();
-    }, 2000); // Wait for animation to complete
 }
 
 function showWinPopup(winnings) {
-    // Create popup container
     const popup = document.createElement('div');
-    popup.className = 'popup-container';
+    popup.className = 'mobile-popup';
     popup.innerHTML = `
         <div class="popup-content">
             <h2>Congratulations!</h2>
-            <p>You won</p>
-            <div class="win-animation">
-                <div class="win-amount">$${winnings.toFixed(2)}</div>
+            <p>You won $${winnings}!</p>
+            <div class="popup-buttons">
+                <button onclick="handleCashout()" class="mobile-popup-btn">Cashout</button>
+                <button onclick="closePopup()" class="mobile-popup-btn">Continue</button>
             </div>
-            <button onclick="closePopup()">Continue</button>
         </div>
     `;
-    
-    // Add popup to the body
     document.body.appendChild(popup);
-    
-    // Add styles for the popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .popup-container {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            width: 300px;
-            z-index: 1000;
-            margin-right: 20px;
-        }
-        .popup-content {
-            background: rgba(26, 26, 46, 0.95);
-            padding: 2rem;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-        .popup-content h2 {
-            color: #2ecc71;
-            margin-bottom: 1rem;
-            font-size: 2rem;
-        }
-        .popup-content p {
-            color: #fff;
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-        .win-animation {
-            position: relative;
-            margin: 2rem 0;
-        }
-        .win-amount {
-            font-size: 3rem;
-            color: #2ecc71;
-            font-weight: bold;
-            position: relative;
-            z-index: 2;
-            animation: amountPulse 2s infinite;
-        }
-        @keyframes amountPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        .popup-content button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-            width: 100%;
-        }
-        .popup-content button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 function animateBalanceIncrease(amount) {
@@ -700,6 +489,9 @@ function animateBalanceIncrease(amount) {
     const targetBalance = currentBalance + amount;
     const duration = 2000; // 2 seconds
     const startTime = performance.now();
+    
+    // Add bloom effect to balance display
+    balanceDisplay.classList.add('balance-bloom');
     
     function updateBalance(currentTime) {
         const elapsed = currentTime - startTime;
@@ -713,6 +505,11 @@ function animateBalanceIncrease(amount) {
         
         if (progress < 1) {
             requestAnimationFrame(updateBalance);
+        } else {
+            // Remove bloom effect after animation
+            setTimeout(() => {
+                balanceDisplay.classList.remove('balance-bloom');
+            }, 500);
         }
     }
     
@@ -720,7 +517,7 @@ function animateBalanceIncrease(amount) {
 }
 
 function closePopup() {
-    const popup = document.querySelector('.popup-container');
+    const popup = document.querySelector('.mobile-popup');
     if (popup) {
         popup.remove();
     }
@@ -783,179 +580,145 @@ function updateTransactionHistory() {
     });
 }
 
-function updateLeaderboard() {
-    const leaderboardList = document.getElementById('leaderboard-list');
-    leaderboardList.innerHTML = '';
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const sortedUsers = [...users].sort((a, b) => b.balance - a.balance);
-    
-    // Add header
-    const header = document.createElement('div');
-    header.className = 'leaderboard-header';
-    header.innerHTML = `
-        <span class="rank">Rank</span>
-        <span class="username">Username</span>
-        <span class="status">Status</span>
-        <span class="balance">Balance</span>
-    `;
-    leaderboardList.appendChild(header);
-    
-    sortedUsers.forEach((user, index) => {
-        const entry = document.createElement('div');
-        entry.className = 'leaderboard-entry';
-        
-        // Add medal emoji for top 3
-        let rankEmoji = '';
-        if (index === 0) rankEmoji = '🥇';
-        else if (index === 1) rankEmoji = '🥈';
-        else if (index === 2) rankEmoji = '🥉';
-        
-        // Check if user is currently playing
-        const isActive = user.username === currentUser?.username;
-        
-        entry.innerHTML = `
-            <span class="rank">${rankEmoji} ${index + 1}.</span>
-            <span class="username">${user.username}</span>
-            <span class="status">${isActive ? '🟢 Playing' : '⚪ Offline'}</span>
-            <span class="balance">$${user.balance.toFixed(2)}</span>
+// Update leaderboard display
+async function updateLeaderboard() {
+    try {
+        const leaderboard = await getLeaderboard();
+        const leaderboardElement = document.getElementById('leaderboard');
+        leaderboardElement.innerHTML = `
+            <div class="leaderboard-header">
+                <span>Rank</span>
+                <span>Username</span>
+                <span>Balance</span>
+            </div>
         `;
-        
-        // Highlight current user
-        if (isActive) {
-            entry.classList.add('current-user');
-        }
-        
-        leaderboardList.appendChild(entry);
-    });
+
+        leaderboard.forEach((user, index) => {
+            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            const entry = document.createElement('div');
+            entry.className = 'leaderboard-entry';
+            entry.innerHTML = `
+                <span>${rankEmoji}</span>
+                <span>${user.username}</span>
+                <span>${user.balance.toFixed(2)}</span>
+            `;
+            leaderboardElement.appendChild(entry);
+        });
+    } catch (error) {
+        console.error('Failed to update leaderboard:', error);
+    }
 }
 
-// Update the leaderboard styles
-const style = document.createElement('style');
-style.textContent = `
-    .leaderboard-header {
-        display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        margin-bottom: 0.5rem;
-        font-weight: bold;
-        color: rgba(255, 255, 255, 0.8);
-    }
-    
-    .leaderboard-entry {
-        display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        gap: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .leaderboard-entry.current-user {
-        background: rgba(76, 175, 80, 0.2);
-        border: 1px solid rgba(76, 175, 80, 0.3);
-    }
-    
-    .leaderboard-entry .rank {
-        font-weight: bold;
-        min-width: 3rem;
-    }
-    
-    .leaderboard-entry .username {
-        font-weight: 500;
-    }
-    
-    .leaderboard-entry .status {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
-        min-width: 6rem;
-        text-align: center;
-    }
-    
-    .leaderboard-entry .balance {
-        font-weight: bold;
-        color: #4CAF50;
-        min-width: 8rem;
-        text-align: right;
-    }
-    
-    .leaderboard-entry:hover {
-        transform: translateX(5px);
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    #leaderboard-list {
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-    }
-    
-    #leaderboard-list::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-`;
-document.head.appendChild(style);
-
-// Update the initializeGame function
-function initializeGame() {
-    // ... existing initialization code ...
-    
-    // Friends system initialization (Commented out for future use)
-    /*
-    updateFriendRequests();
-    updateFriendsList();
-    
-    const searchInput = document.getElementById('friend-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', searchFriends);
-    }
-    */
+// Update initializeGame function
+async function initializeGame() {
+    updatePreGameStats();
+    updateTransactionHistory();
+    initializeGameBoard();
+    await updateLeaderboard();
 }
 
-// Update the handleLogin function
-function handleLogin() {
-    const username = document.getElementById('login-username').value;
+// Add debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Update handleLogin function
+async function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
     
-    if (!username || !password) {
-        alert('Please enter both username and password');
+    try {
+        await login(username, password);
+        await initializeGame();
+        showGameSection();
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Add handleRegister function
+async function handleRegister(event) {
+    event.preventDefault();
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        showError('Passwords do not match');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
+    try {
+        await register(username, password);
+        await initializeGame();
         showGameSection();
-        
-        // Friends system update (Commented out for future use)
-        /*
-        updateFriendRequests();
-        updateFriendsList();
-        */
-    } else {
-        alert('Invalid credentials');
+    } catch (error) {
+        showError(error.message);
     }
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    
+    const authForm = document.querySelector('.auth-form');
+    const existingError = authForm.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    authForm.insertBefore(errorDiv, authForm.firstChild);
+    
+    // Auto-remove error after 5 seconds
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+// Mobile gesture setup
+function setupMobileGestures() {
+    const gameBoard = document.getElementById('game-board');
+    if (!gameBoard) return;
+
+    // Prevent default touch behaviors
+    gameBoard.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        lastTouchTime = Date.now();
+    }, { passive: false });
+
+    gameBoard.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    gameBoard.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDuration = Date.now() - lastTouchTime;
+
+        // Calculate swipe distance
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // If it's a quick tap (less than 300ms) and small movement (less than 10px)
+        if (touchDuration < 300 && Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+            const target = document.elementFromPoint(touchEndX, touchEndY);
+            if (target && target.classList.contains('mine-cell')) {
+                const index = Array.from(target.parentNode.children).indexOf(target);
+                handleCellClick(index);
+            }
+        }
+    }, { passive: false });
 } 
