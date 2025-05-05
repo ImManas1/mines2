@@ -317,6 +317,18 @@ function initializeGameBoard() {
         cell.addEventListener('click', () => handleCellClick(i));
         gameBoard.appendChild(cell);
     }
+
+    // Initialize cashout button
+    const cashoutBtn = document.getElementById('cashout-btn');
+    if (cashoutBtn) {
+        cashoutBtn.addEventListener('click', () => {
+            if (!gameState.gameActive) {
+                alert('No active game to cashout');
+                return;
+            }
+            cashout();
+        });
+    }
 }
 
 async function handleBet() {
