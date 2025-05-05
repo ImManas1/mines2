@@ -202,23 +202,13 @@ function showGameSection() {
     
     // Update user info
     document.getElementById('username-display').textContent = currentUser.username;
-    document.getElementById('balance-display').textContent = `Balance: $${currentUser.balance.toFixed(2)}`;
+    document.getElementById('balance-display').textContent = `Balance: $${currentUser.balance}`;
     
-    // Initialize game state
-    gameState = {
-        balance: currentUser.balance,
-        currentBet: 0,
-        multiplier: 1.00,
-        revealedCells: 0,
-        gameActive: false,
-        mines: [],
-        mineCount: 1
-    };
-    
-    // Update UI
-    updatePreGameStats();
-    updateTransactionHistory();
+    // Initialize game board
     initializeGameBoard();
+    
+    // Update stats
+    updatePreGameStats();
 }
 
 function showAuthSection() {
@@ -318,8 +308,8 @@ function updateGameStats() {
 function initializeGameBoard() {
     const gameBoard = document.getElementById('game-board');
     gameBoard.innerHTML = '';
-    gameBoard.style.gridTemplateColumns = 'repeat(5, 1fr)'; // Fixed 5x5 grid
     
+    // Create 5x5 grid
     for (let i = 0; i < 25; i++) {
         const cell = document.createElement('div');
         cell.className = 'mine-cell';
