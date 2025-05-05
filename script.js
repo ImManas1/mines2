@@ -64,43 +64,29 @@ function setupAuthTabs() {
 }
 
 function checkLoginStatus() {
-<<<<<<< HEAD
     try {
         const user = JSON.parse(localStorage.getItem('currentUser'));
         if (user) {
             currentUser = user;
             showGameSection();
+            return true;
         }
     } catch (error) {
         console.error('Error checking login status:', error);
         localStorage.removeItem('currentUser');
-=======
-    const storedUser = localStorage.getItem('currentUser');
-    const storedToken = localStorage.getItem('authToken');
-    
-    if (storedUser && storedToken) {
-        try {
-            currentUser = JSON.parse(storedUser);
-            authToken = storedToken;
-            showGameSection();
-            return true;
-        } catch (error) {
-            console.error('Error parsing stored user:', error);
-            logout();
-            return false;
-        }
->>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
     }
     return false;
 }
 
-// Authentication Functions
-async function register(username, password) {
+function login() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    
     if (!username || !password) {
-        throw new Error('Username and password are required');
+        alert('Please enter both username and password');
+        return;
     }
     
-<<<<<<< HEAD
     try {
         const users = JSON.parse(localStorage.getItem('users')) || [];
         const user = users.find(u => u.username === username && u.password === password);
@@ -115,66 +101,28 @@ async function register(username, password) {
     } catch (error) {
         console.error('Error during login:', error);
         alert('An error occurred during login. Please try again.');
-=======
-    if (password.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Registration failed');
-        }
-        
-        // Store user data and token
-        currentUser = data.user;
-        authToken = data.token;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        localStorage.setItem('authToken', authToken);
-        
-        return data;
-    } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
->>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
     }
 }
 
-async function login(username, password) {
-    if (!username || !password) {
-        throw new Error('Username and password are required');
+function register() {
+    const username = document.getElementById('register-username').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+    
+    if (!username || !password || !confirmPassword) {
+        alert('Please fill in all fields');
+        return;
     }
     
-    try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
-        }
-        
-        // Store user data and token
-        currentUser = data.user;
-        authToken = data.token;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        localStorage.setItem('authToken', authToken);
-        
-        return data;
-    } catch (error) {
-        console.error('Login error:', error);
-        throw error;
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
     }
-<<<<<<< HEAD
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+    }
     
     try {
         const users = JSON.parse(localStorage.getItem('users')) || [];
@@ -199,15 +147,11 @@ async function login(username, password) {
         console.error('Error during registration:', error);
         alert('An error occurred during registration. Please try again.');
     }
-=======
->>>>>>> e405814119ae2a748d3fc3d7f671ace132022232
 }
 
 function logout() {
     currentUser = null;
-    authToken = null;
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('authToken');
     showAuthSection();
 }
 
