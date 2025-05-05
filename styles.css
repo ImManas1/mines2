@@ -893,4 +893,37 @@
                 padding-bottom: max(1rem, env(safe-area-inset-bottom));
             }
         }
+    }
+
+    /* Error Message Styles */
+    .error-message {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-size: 0.9rem;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        animation: errorFadeIn 0.3s ease-out;
+    }
+
+    @keyframes errorFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Mobile-specific error styles */
+    @media (max-width: 768px) {
+        .error-message {
+            padding: 0.8rem;
+            font-size: 0.85rem;
+            margin: 0.5rem 0;
+        }
     } 
