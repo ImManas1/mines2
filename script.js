@@ -188,8 +188,22 @@ function updateFriendsList() {
 }
 */
 
+// Initialize localStorage items if they don't exist
+function initializeLocalStorage() {
+    if (!localStorage.getItem('users')) {
+        localStorage.setItem('users', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('friendRequests')) {
+        localStorage.setItem('friendRequests', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('friends')) {
+        localStorage.setItem('friends', JSON.stringify({}));
+    }
+}
+
 // Initialize the game
 document.addEventListener('DOMContentLoaded', () => {
+    initializeLocalStorage();
     setupAuthTabs();
     checkLoginStatus();
     updatePreGameStats();
@@ -218,10 +232,15 @@ function setupAuthTabs() {
 }
 
 function checkLoginStatus() {
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (user) {
-        currentUser = user;
-        showGameSection();
+    try {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user) {
+            currentUser = user;
+            showGameSection();
+        }
+    } catch (error) {
+        console.error('Error checking login status:', error);
+        localStorage.removeItem('currentUser');
     }
 }
 
@@ -234,20 +253,20 @@ function login() {
         return;
     }
     
-    // In a real app, this would be a server call
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showGameSection();
+    try {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(u => u.username === username && u.password === password);
         
-        // Update friend lists after login
-        updateFriendRequests();
-        updateFriendsList();
-    } else {
-        alert('Invalid credentials');
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            showGameSection();
+        } else {
+            alert('Invalid credentials');
+        }
+    } catch (error) {
+        console.error('Error during login:', error);
+        alert('An error occurred during login. Please try again.');
     }
 }
 
@@ -266,25 +285,29 @@ function register() {
         return;
     }
     
-    // In a real app, this would be a server call
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    if (users.some(u => u.username === username)) {
-        alert('Username already exists');
-        return;
+    try {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        if (users.some(u => u.username === username)) {
+            alert('Username already exists');
+            return;
+        }
+        
+        const newUser = {
+            username,
+            password,
+            balance: 1000,
+            transactions: []
+        };
+        
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        currentUser = newUser;
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+        showGameSection();
+    } catch (error) {
+        console.error('Error during registration:', error);
+        alert('An error occurred during registration. Please try again.');
     }
-    
-    const newUser = {
-        username,
-        password,
-        balance: 1000,
-        transactions: []
-    };
-    
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    currentUser = newUser;
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    showGameSection();
 }
 
 function logout() {
