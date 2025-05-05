@@ -1,4 +1,5 @@
 // Game state
+
 let currentUser = null;
 let gameState = {
     balance: 1000,
@@ -10,189 +11,21 @@ let gameState = {
     mineCount: 1
 };
 
-// Friends system (Commented out for future use)
-/*
-let friendRequests = JSON.parse(localStorage.getItem('friendRequests')) || [];
-let friends = JSON.parse(localStorage.getItem('friends')) || {};
+// Touch state
+let touchStartX = 0;
+let touchStartY = 0;
+let lastTouchTime = 0;
 
-function searchFriends() {
-    const searchInput = document.getElementById('friend-search');
-    const searchTerm = searchInput.value.toLowerCase();
-    
-    if (!searchTerm) {
-        const existingResults = document.querySelector('.search-results');
-        if (existingResults) {
-            existingResults.remove();
-        }
-        return;
-    }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    const results = users.filter(user => 
-        user.username.toLowerCase().includes(searchTerm) && 
-        user.username !== currentUser?.username &&
-        !friends[currentUser?.username]?.includes(user.username)
-    );
-    
-    const existingResults = document.querySelector('.search-results');
-    if (existingResults) {
-        existingResults.remove();
-    }
-    
-    const searchResults = document.createElement('div');
-    searchResults.className = 'search-results';
-    
-    if (results.length === 0) {
-        searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
-    } else {
-        results.forEach(user => {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'search-result-item';
-            resultItem.innerHTML = `
-                <div>${user.username}</div>
-                <button class="add-friend-btn" onclick="sendFriendRequest('${user.username}')">Add Friend</button>
-            `;
-            searchResults.appendChild(resultItem);
-        });
-    }
-    
-    searchInput.parentNode.appendChild(searchResults);
-}
-
-function sendFriendRequest(username) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const existingRequest = friendRequests.find(
-        request => request.from === currentUser.username && request.to === username
-    );
-    
-    if (existingRequest) {
-        alert('Friend request already sent');
-        return;
-    }
-    
-    const request = {
-        from: currentUser.username,
-        to: username,
-        timestamp: new Date().toISOString()
-    };
-    
-    friendRequests.push(request);
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    const searchResults = document.querySelector('.search-results');
-    if (searchResults) {
-        searchResults.remove();
-    }
-    
-    document.getElementById('friend-search').value = '';
-    
-    updateFriendRequests();
-    alert('Friend request sent successfully!');
-}
-
-function updateFriendRequests() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const requestsList = document.getElementById('friend-requests-list');
-    if (!requestsList) return;
-    
-    requestsList.innerHTML = '';
-    
-    const userRequests = friendRequests.filter(request => request.to === currentUser.username);
-    
-    if (userRequests.length === 0) {
-        requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
-        return;
-    }
-    
-    userRequests.forEach(request => {
-        const requestItem = document.createElement('div');
-        requestItem.className = 'friend-request-item';
-        requestItem.innerHTML = `
-            <div>${request.from}</div>
-            <div class="friend-request-actions">
-                <button class="accept-request" onclick="handleFriendRequest('${request.from}', true)">Accept</button>
-                <button class="reject-request" onclick="handleFriendRequest('${request.from}', false)">Reject</button>
-            </div>
-        `;
-        requestsList.appendChild(requestItem);
-    });
-}
-
-function handleFriendRequest(username, accept) {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    friendRequests = friendRequests.filter(request => 
-        !(request.from === username && request.to === currentUser.username)
-    );
-    localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
-    
-    if (accept) {
-        if (!friends[currentUser.username]) {
-            friends[currentUser.username] = [];
-        }
-        if (!friends[username]) {
-            friends[username] = [];
-        }
-        
-        if (!friends[currentUser.username].includes(username)) {
-            friends[currentUser.username].push(username);
-        }
-        if (!friends[username].includes(currentUser.username)) {
-            friends[username].push(currentUser.username);
-        }
-        
-        localStorage.setItem('friends', JSON.stringify(friends));
-        alert(`You are now friends with ${username}!`);
-    } else {
-        alert(`Friend request from ${username} rejected`);
-    }
-    
-    updateFriendRequests();
-    updateFriendsList();
-}
-
-function updateFriendsList() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) return;
-    
-    const friendsList = document.getElementById('friends-list');
-    if (!friendsList) return;
-    
-    friendsList.innerHTML = '';
-    
-    const userFriends = friends[currentUser.username] || [];
-    
-    if (userFriends.length === 0) {
-        friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
-        return;
-    }
-    
-    userFriends.forEach(friend => {
-        const friendItem = document.createElement('div');
-        friendItem.className = 'friend-item';
-        friendItem.innerHTML = `
-            <div>${friend}</div>
-            <div class="friend-status ${friend === currentUser.username ? 'online' : 'offline'}">
-                ${friend === currentUser.username ? 'Online' : 'Offline'}
-            </div>
-        `;
-        friendsList.appendChild(friendItem);
-    });
-}
-*/
+// API Configuration
+const API_BASE_URL = 'https://mines-ez7j.onrender.com/api';
+let authToken = null;
 
 // Initialize the game
 document.addEventListener('DOMContentLoaded', () => {
     setupAuthTabs();
     checkLoginStatus();
     updatePreGameStats();
+    setupMobileGestures();
 });
 
 // Authentication functions
@@ -225,72 +58,148 @@ function checkLoginStatus() {
     }
 }
 
-function login() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    
-    if (!username || !password) {
-        alert('Please enter both username and password');
-        return;
+// Authentication Functions
+async function register(username, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+    } catch (error) {
+        throw error;
     }
-    
-    // In a real app, this would be a server call
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showGameSection();
-        
-        // Update friend lists after login
-        updateFriendRequests();
-        updateFriendsList();
+}
+
+async function login(username, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        authToken = data.token;
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Game State Management
+async function updateGameState(type, amount) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/game/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ type, amount })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Add error handling middleware
+async function handleApiError(error) {
+    console.error('API Error:', error);
+    if (error.message === 'Failed to fetch') {
+        alert('Cannot connect to the server. Please make sure the server is running.');
     } else {
-        alert('Invalid credentials');
+        alert(error.message || 'An error occurred. Please try again.');
     }
 }
 
-function register() {
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
-    const confirmPassword = document.getElementById('register-confirm-password').value;
-    
-    if (!username || !password || !confirmPassword) {
-        alert('Please fill in all fields');
-        return;
+// Friend System
+async function searchUsers(query) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/search?query=${query}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to search users');
+        }
+        return await response.json();
+    } catch (error) {
+        handleApiError(error);
+        throw error;
     }
-    
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-    
-    // In a real app, this would be a server call
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    if (users.some(u => u.username === username)) {
-        alert('Username already exists');
-        return;
-    }
-    
-    const newUser = {
-        username,
-        password,
-        balance: 1000,
-        transactions: []
-    };
-    
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    currentUser = newUser;
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    showGameSection();
 }
 
-function logout() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    showAuthSection();
+async function sendFriendRequest(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/friends/request`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ userId })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to send friend request');
+        }
+        const data = await response.json();
+        alert('Friend request sent successfully!');
+        return data;
+    } catch (error) {
+        handleApiError(error);
+        throw error;
+    }
+}
+
+async function handleFriendRequest(requestId, action) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/friends/request/${requestId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ action })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to process friend request');
+        }
+        const data = await response.json();
+        
+        if (action === 'accept') {
+            alert('Friend request accepted!');
+        } else {
+            alert('Friend request rejected.');
+        }
+        
+        await updateFriendRequests();
+        await updateFriendsList();
+        return data;
+    } catch (error) {
+        handleApiError(error);
+        throw error;
+    }
+}
+
+// Leaderboard
+async function getLeaderboard() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/leaderboard`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        return data;
+    } catch (error) {
+        throw error;
+    }
 }
 
 function showGameSection() {
@@ -301,12 +210,6 @@ function showGameSection() {
     updateLeaderboard();
     updateTransactionHistory();
     initializeGameBoard();
-    
-    // Friends system initialization (Commented out for future use)
-    /*
-    updateFriendRequests();
-    updateFriendsList();
-    */
 }
 
 function showAuthSection() {
@@ -384,35 +287,19 @@ function initializeGameBoard() {
     }
 }
 
-function placeBet() {
-    const betAmount = parseInt(document.getElementById('bet-amount').value);
-    
-    if (betAmount <= 0 || betAmount > currentUser.balance) {
-        alert('Invalid bet amount');
+async function handleBet() {
+    const betAmount = parseFloat(document.getElementById('bet-amount').value);
+    if (isNaN(betAmount) || betAmount <= 0) {
+        alert('Please enter a valid bet amount');
         return;
     }
-    
-    gameState.currentBet = betAmount;
-    gameState.multiplier = 1.00;
-    gameState.revealedCells = 0;
-    gameState.gameActive = true;
-    
-    // Generate mines
-    gameState.mines = [];
-    while (gameState.mines.length < gameState.mineCount) {
-        const mine = Math.floor(Math.random() * 25); // Fixed 5x5 grid
-        if (!gameState.mines.includes(mine)) {
-            gameState.mines.push(mine);
-        }
+
+    try {
+        await updateGameState('bet', -betAmount);
+        startGame(betAmount);
+    } catch (error) {
+        alert(error.message);
     }
-    
-    // Reset board
-    const cells = document.querySelectorAll('.mine-cell');
-    cells.forEach(cell => {
-        cell.classList.remove('revealed', 'mine');
-    });
-    
-    updateGameStats();
 }
 
 function handleCellClick(index) {
@@ -453,79 +340,23 @@ function handleCellClick(index) {
 }
 
 function showLossPopup() {
-    // Reveal all mines
-    gameState.mines.forEach(mineIndex => {
-        const cell = document.querySelector(`.mine-cell[data-index="${mineIndex}"]`);
-        if (cell) {
-            cell.classList.add('mine');
-        }
-    });
-
-    // Create popup container
     const popup = document.createElement('div');
-    popup.className = 'popup-container';
+    popup.className = 'mobile-popup';
     popup.innerHTML = `
         <div class="popup-content">
             <h2>Game Over!</h2>
-            <p>You hit a mine and lost $${gameState.currentBet}</p>
-            <button onclick="resetGame()">Play Again</button>
+            <p>You hit a mine!</p>
+            <p>You lost $${gameState.currentBet}</p>
+            <button onclick="closePopup()" class="mobile-popup-btn">OK</button>
         </div>
     `;
-    
-    // Add popup to the body
     document.body.appendChild(popup);
-    
-    // Add styles for the popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .popup-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .popup-content {
-            background: #1a1a2e;
-            padding: 2rem;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .popup-content h2 {
-            color: #e74c3c;
-            margin-bottom: 1rem;
-        }
-        .popup-content p {
-            color: #fff;
-            margin-bottom: 1.5rem;
-        }
-        .popup-content button {
-            background: #4CAF50;
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .popup-content button:hover {
-            background: #45a049;
-        }
-    `;
-    document.head.appendChild(style);
+    resetGame();
 }
 
 function resetGame() {
     // Remove popup
-    const popup = document.querySelector('.popup-container');
+    const popup = document.querySelector('.mobile-popup');
     if (popup) {
         popup.remove();
     }
@@ -548,127 +379,32 @@ function resetGame() {
     updatePreGameStats();
 }
 
-function cashout() {
-    if (!gameState.gameActive || gameState.revealedCells === 0) {
-        return;
+async function handleCashout() {
+    try {
+        const winnings = calculateWinnings();
+        await updateGameState('win', winnings);
+        showWinPopup(winnings);
+        animateBalanceIncrease(winnings);
+        resetBoard();
+    } catch (error) {
+        alert(error.message);
     }
-    
-    const winnings = gameState.currentBet * gameState.multiplier;
-    
-    // Reveal all mines
-    gameState.mines.forEach(mineIndex => {
-        const cell = document.querySelector(`.mine-cell[data-index="${mineIndex}"]`);
-        if (cell) {
-            cell.classList.add('mine');
-        }
-    });
-    
-    // Show win popup with animation
-    showWinPopup(winnings);
-    
-    // Animate balance increase
-    animateBalanceIncrease(winnings);
-    
-    // Update balance after animation
-    setTimeout(() => {
-        currentUser.balance += winnings;
-        addTransaction('Win', winnings);
-        updateBalance();
-        
-        gameState.gameActive = false;
-        updateGameStats();
-        resetGame();
-    }, 2000); // Wait for animation to complete
 }
 
 function showWinPopup(winnings) {
-    // Create popup container
     const popup = document.createElement('div');
-    popup.className = 'popup-container';
+    popup.className = 'mobile-popup';
     popup.innerHTML = `
         <div class="popup-content">
             <h2>Congratulations!</h2>
-            <p>You won</p>
-            <div class="win-animation">
-                <div class="win-amount">$${winnings.toFixed(2)}</div>
+            <p>You won $${winnings}!</p>
+            <div class="popup-buttons">
+                <button onclick="handleCashout()" class="mobile-popup-btn">Cashout</button>
+                <button onclick="closePopup()" class="mobile-popup-btn">Continue</button>
             </div>
-            <button onclick="closePopup()">Continue</button>
         </div>
     `;
-    
-    // Add popup to the body
     document.body.appendChild(popup);
-    
-    // Add styles for the popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .popup-container {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            width: 300px;
-            z-index: 1000;
-            margin-right: 20px;
-        }
-        .popup-content {
-            background: rgba(26, 26, 46, 0.95);
-            padding: 2rem;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-        .popup-content h2 {
-            color: #2ecc71;
-            margin-bottom: 1rem;
-            font-size: 2rem;
-        }
-        .popup-content p {
-            color: #fff;
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-        .win-animation {
-            position: relative;
-            margin: 2rem 0;
-        }
-        .win-amount {
-            font-size: 3rem;
-            color: #2ecc71;
-            font-weight: bold;
-            position: relative;
-            z-index: 2;
-            animation: amountPulse 2s infinite;
-        }
-        @keyframes amountPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        .popup-content button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-            width: 100%;
-        }
-        .popup-content button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 function animateBalanceIncrease(amount) {
@@ -677,6 +413,9 @@ function animateBalanceIncrease(amount) {
     const targetBalance = currentBalance + amount;
     const duration = 2000; // 2 seconds
     const startTime = performance.now();
+    
+    // Add bloom effect to balance display
+    balanceDisplay.classList.add('balance-bloom');
     
     function updateBalance(currentTime) {
         const elapsed = currentTime - startTime;
@@ -690,6 +429,11 @@ function animateBalanceIncrease(amount) {
         
         if (progress < 1) {
             requestAnimationFrame(updateBalance);
+        } else {
+            // Remove bloom effect after animation
+            setTimeout(() => {
+                balanceDisplay.classList.remove('balance-bloom');
+            }, 500);
         }
     }
     
@@ -697,7 +441,7 @@ function animateBalanceIncrease(amount) {
 }
 
 function closePopup() {
-    const popup = document.querySelector('.popup-container');
+    const popup = document.querySelector('.mobile-popup');
     if (popup) {
         popup.remove();
     }
@@ -760,51 +504,33 @@ function updateTransactionHistory() {
     });
 }
 
-function updateLeaderboard() {
-    const leaderboardList = document.getElementById('leaderboard-list');
-    leaderboardList.innerHTML = '';
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const sortedUsers = [...users].sort((a, b) => b.balance - a.balance);
-    
-    // Add header
-    const header = document.createElement('div');
-    header.className = 'leaderboard-header';
-    header.innerHTML = `
-        <span class="rank">Rank</span>
-        <span class="username">Username</span>
-        <span class="status">Status</span>
-        <span class="balance">Balance</span>
-    `;
-    leaderboardList.appendChild(header);
-    
-    sortedUsers.forEach((user, index) => {
-        const entry = document.createElement('div');
-        entry.className = 'leaderboard-entry';
-        
-        // Add medal emoji for top 3
-        let rankEmoji = '';
-        if (index === 0) rankEmoji = '🥇';
-        else if (index === 1) rankEmoji = '🥈';
-        else if (index === 2) rankEmoji = '🥉';
-        
-        // Check if user is currently playing
-        const isActive = user.username === currentUser?.username;
-        
-        entry.innerHTML = `
-            <span class="rank">${rankEmoji} ${index + 1}.</span>
-            <span class="username">${user.username}</span>
-            <span class="status">${isActive ? '🟢 Playing' : '⚪ Offline'}</span>
-            <span class="balance">$${user.balance.toFixed(2)}</span>
+// Update leaderboard display
+async function updateLeaderboard() {
+    try {
+        const leaderboard = await getLeaderboard();
+        const leaderboardElement = document.getElementById('leaderboard');
+        leaderboardElement.innerHTML = `
+            <div class="leaderboard-header">
+                <span>Rank</span>
+                <span>Username</span>
+                <span>Balance</span>
+            </div>
         `;
-        
-        // Highlight current user
-        if (isActive) {
-            entry.classList.add('current-user');
-        }
-        
-        leaderboardList.appendChild(entry);
-    });
+
+        leaderboard.forEach((user, index) => {
+            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            const entry = document.createElement('div');
+            entry.className = 'leaderboard-entry';
+            entry.innerHTML = `
+                <span>${rankEmoji}</span>
+                <span>${user.username}</span>
+                <span>${user.balance.toFixed(2)}</span>
+            `;
+            leaderboardElement.appendChild(entry);
+        });
+    } catch (error) {
+        console.error('Failed to update leaderboard:', error);
+    }
 }
 
 // Update the leaderboard styles
@@ -893,46 +619,249 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Update the initializeGame function
-function initializeGame() {
-    // ... existing initialization code ...
-    
-    // Friends system initialization (Commented out for future use)
-    /*
-    updateFriendRequests();
-    updateFriendsList();
-    
-    const searchInput = document.getElementById('friend-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', searchFriends);
+// Add bloom effect styles for balance display
+const balanceStyle = document.createElement('style');
+balanceStyle.textContent = `
+    .balance-bloom {
+        position: relative;
+        animation: balancePulse 0.5s ease-in-out;
     }
-    */
-}
-
-// Update the handleLogin function
-function handleLogin() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
     
-    if (!username || !password) {
-        alert('Please enter both username and password');
+    .balance-bloom::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(46, 204, 113, 0.5) 0%, rgba(46, 204, 113, 0) 70%);
+        border-radius: 50%;
+        animation: balanceBloom 0.5s ease-in-out;
+    }
+    
+    @keyframes balancePulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes balanceBloom {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    }
+`;
+document.head.appendChild(balanceStyle);
+
+// Friends System
+async function searchFriends() {
+    const searchInput = document.getElementById('friend-search');
+    const query = searchInput.value.trim();
+    
+    if (!query) {
+        const existingResults = document.querySelector('.search-results');
+        if (existingResults) {
+            existingResults.remove();
+        }
         return;
     }
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.username === username && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showGameSection();
-        
-        // Friends system update (Commented out for future use)
-        /*
-        updateFriendRequests();
-        updateFriendsList();
-        */
-    } else {
-        alert('Invalid credentials');
+
+    try {
+        const users = await searchUsers(query);
+        const existingResults = document.querySelector('.search-results');
+        if (existingResults) {
+            existingResults.remove();
+        }
+
+        const searchResults = document.createElement('div');
+        searchResults.className = 'search-results';
+
+        if (users.length === 0) {
+            searchResults.innerHTML = '<div class="search-result-item">No users found</div>';
+        } else {
+            users.forEach(user => {
+                // Skip current user from search results
+                if (user._id === currentUser._id) return;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.innerHTML = `
+                    <div>${user.username}</div>
+                    <button class="add-friend-btn" onclick="sendFriendRequest('${user._id}')">Add Friend</button>
+                `;
+                searchResults.appendChild(resultItem);
+            });
+        }
+
+        const searchContainer = searchInput.parentNode;
+        searchContainer.appendChild(searchResults);
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function closeResults(e) {
+            if (!searchContainer.contains(e.target)) {
+                searchResults.remove();
+                document.removeEventListener('click', closeResults);
+            }
+        });
+    } catch (error) {
+        console.error('Failed to search users:', error);
+        alert('Failed to search users. Please try again.');
     }
+}
+
+async function updateFriendRequests() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch friend requests');
+        }
+        const user = await response.json();
+        
+        const requestsList = document.getElementById('friend-requests-list');
+        requestsList.innerHTML = '';
+
+        if (user.friendRequests.length === 0) {
+            requestsList.innerHTML = '<div class="no-requests">No friend requests</div>';
+            return;
+        }
+
+        user.friendRequests.forEach(request => {
+            if (request.status === 'pending') {
+                const requestItem = document.createElement('div');
+                requestItem.className = 'friend-request-item';
+                requestItem.innerHTML = `
+                    <div>${request.from.username}</div>
+                    <div class="friend-request-actions">
+                        <button class="accept-request" onclick="handleFriendRequest('${request._id}', 'accept')">Accept</button>
+                        <button class="reject-request" onclick="handleFriendRequest('${request._id}', 'reject')">Reject</button>
+                    </div>
+                `;
+                requestsList.appendChild(requestItem);
+            }
+        });
+    } catch (error) {
+        handleApiError(error);
+    }
+}
+
+async function updateFriendsList() {
+    try {
+        const response = await fetch(`https://mines-ez7j.onrender.com/profile`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch friends list');
+        }
+        const user = await response.json();
+        
+        const friendsList = document.getElementById('friends-list');
+        friendsList.innerHTML = '';
+
+        if (user.friends.length === 0) {
+            friendsList.innerHTML = '<div class="no-friends">No friends yet</div>';
+            return;
+        }
+
+        user.friends.forEach(friend => {
+            const friendItem = document.createElement('div');
+            friendItem.className = 'friend-item';
+            friendItem.innerHTML = `
+                <div>${friend.username}</div>
+                <div class="friend-status ${friend.online ? 'online' : 'offline'}">
+                    ${friend.online ? 'Online' : 'Offline'}
+                </div>
+            `;
+            friendsList.appendChild(friendItem);
+        });
+    } catch (error) {
+        handleApiError(error);
+    }
+}
+
+// Update initializeGame function
+async function initializeGame() {
+    updatePreGameStats();
+    updateTransactionHistory();
+    initializeGameBoard();
+    
+    // Initialize friends system
+    const searchInput = document.getElementById('friend-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(searchFriends, 300));
+    }
+    
+    await updateFriendRequests();
+    await updateFriendsList();
+}
+
+// Add debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Update handleLogin function
+async function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+        await login(username, password);
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('game-section').classList.remove('hidden');
+        await initializeGame();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+// Mobile gesture setup
+function setupMobileGestures() {
+    const gameBoard = document.getElementById('game-board');
+    if (!gameBoard) return;
+
+    // Prevent default touch behaviors
+    gameBoard.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        lastTouchTime = Date.now();
+    }, { passive: false });
+
+    gameBoard.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    gameBoard.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDuration = Date.now() - lastTouchTime;
+
+        // Calculate swipe distance
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // If it's a quick tap (less than 300ms) and small movement (less than 10px)
+        if (touchDuration < 300 && Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+            const target = document.elementFromPoint(touchEndX, touchEndY);
+            if (target && target.classList.contains('mine-cell')) {
+                const index = Array.from(target.parentNode.children).indexOf(target);
+                handleCellClick(index);
+            }
+        }
+    }, { passive: false });
 } 
