@@ -237,10 +237,21 @@ function calculatePreGameMultiplier() {
     const totalCells = 25; // Fixed 5x5 grid
     const safeCells = totalCells - gameState.mineCount;
     
-    // New multiplier formula: higher multiplier for more mines
-    // Base multiplier increases exponentially with mine count
-    const baseMultiplier = 1 + (gameState.mineCount * 0.2) + (Math.pow(gameState.mineCount, 1.5) * 0.05);
-    return baseMultiplier.toFixed(2);
+    // More balanced multiplier formula that properly scales with risk
+    // The multiplier increases exponentially with the ratio of mines to safe cells
+    const mineRatio = gameState.mineCount / totalCells;
+    const safeRatio = safeCells / totalCells;
+    
+    // Base multiplier calculation that ensures higher risk = higher reward
+    // The formula ensures that:
+    // 1. More mines = higher multiplier
+    // 2. The increase is exponential but controlled
+    // 3. The multiplier is always greater than 1
+    const baseMultiplier = 1 + (mineRatio * 2) + (Math.pow(mineRatio, 2) * 3);
+    
+    // Ensure the multiplier is reasonable and capped
+    const maxMultiplier = 10; // Cap the maximum multiplier
+    return Math.min(baseMultiplier, maxMultiplier).toFixed(2);
 }
 
 function updatePreGameStats() {
