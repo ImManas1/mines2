@@ -216,7 +216,7 @@ body {
 .setting-group label {
     font-size: 0.9rem;
     white-space: nowrap;
-    color: #000000;
+    color: #fff;
 }
 
 .select-wrapper {
@@ -487,5 +487,82 @@ body {
 
     button:active {
         transform: scale(0.98);
+    }
+}
+
+.mines-settings {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.2rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mines-settings h3 {
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #fff;
+    pointer-events: none;
+}
+
+.mines-settings select {
+    width: 100%;
+    padding: 1rem 2.5rem 1rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: all 0.3s ease;
+}
+
+.mines-settings select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+.mines-settings select option {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+/* Mobile-specific select styles */
+@media (max-width: 768px) {
+    .mines-settings {
+        padding: 1rem;
+    }
+    
+    .mines-settings select {
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+    
+    .select-wrapper::after {
+        right: 1.2rem;
     }
 } 
