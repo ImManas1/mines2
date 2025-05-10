@@ -251,6 +251,7 @@ function handleCellClick(index) {
     if (gameState.mines.includes(index)) {
         // Hit a mine
         cell.classList.add('mine');
+        cell.textContent = '💣';
         gameState.gameActive = false;
         currentUser.balance -= gameState.currentBet;
         addTransaction('Loss', -gameState.currentBet);
@@ -262,6 +263,7 @@ function handleCellClick(index) {
     } else {
         // Safe cell
         cell.classList.add('revealed');
+        cell.textContent = '💰';
         gameState.revealedCells++;
         
         // New multiplier calculation that increases more with each revealed cell
@@ -279,6 +281,7 @@ function showLossPopup() {
         const cell = document.querySelector(`.mine-cell[data-index="${mineIndex}"]`);
         if (cell) {
             cell.classList.add('mine');
+            cell.textContent = '💣';
         }
     });
 
@@ -362,6 +365,7 @@ function resetGame() {
     const cells = document.querySelectorAll('.mine-cell');
     cells.forEach(cell => {
         cell.classList.remove('revealed', 'mine');
+        cell.textContent = '';
     });
     
     // Update stats
