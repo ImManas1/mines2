@@ -216,7 +216,7 @@ body {
 .setting-group label {
     font-size: 0.9rem;
     white-space: nowrap;
-    color: #fff;
+    color: #000000;
 }
 
 .select-wrapper {
