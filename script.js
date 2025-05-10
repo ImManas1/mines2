@@ -1,4 +1,3 @@
-
 // Game state
 let currentUser = null;
 let gameState = {
@@ -416,22 +415,28 @@ function showWinPopup(winnings) {
         .popup-container {
             position: fixed;
             top: 0;
-            left: 0;
+            right: 0;
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
             z-index: 1000;
         }
         .popup-content {
             background: #1a1a2e;
             padding: 2rem;
-            border-radius: 10px;
+            border-radius: 10px 0 0 10px;
             text-align: center;
             max-width: 400px;
             width: 90%;
+            margin-right: 0;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
         }
         .popup-content h2 {
             color: #2ecc71;
