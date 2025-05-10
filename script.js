@@ -15,6 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthTabs();
     checkLoginStatus();
     updatePreGameStats();
+    setupMobileTabs();
+    
+    // Prevent zoom on double tap for mobile
+    document.addEventListener('touchend', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+    
+    // Prevent pull-to-refresh on mobile
+    document.body.style.overscrollBehavior = 'none';
 });
 
 // Authentication functions
@@ -634,4 +643,50 @@ style.textContent = `
         background: rgba(255, 255, 255, 0.1);
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// Mobile tab switching
+function setupMobileTabs() {
+    const tabButtons = document.querySelectorAll('.mobile-tabs .tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.dataset.tab;
+            
+            // Update active button
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Show corresponding tab
+            if (tabName === 'game') {
+                document.querySelector('.game-container').classList.remove('hidden');
+                document.querySelector('.tab-content').classList.add('hidden');
+            } else {
+                document.querySelector('.game-container').classList.add('hidden');
+                document.querySelector('.tab-content').classList.remove('hidden');
+                
+                tabPanes.forEach(pane => {
+                    if (pane.id === `${tabName}-tab`) {
+                        pane.classList.add('active');
+                    } else {
+                        pane.classList.remove('active');
+                    }
+                });
+            }
+        });
+    });
+}
+
+// Quick bet amount buttons
+function setBetAmount(amount) {
+    const betInput = document.getElementById('bet-amount');
+    const currentBet = parseInt(betInput.value) || 0;
+    const newBet = currentBet + amount;
+    
+    if (newBet <= currentUser.balance) {
+        betInput.value = newBet;
+    } else {
+        betInput.value = currentUser.balance;
+    }
+} 
