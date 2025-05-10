@@ -32,6 +32,40 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Prevent pull-to-refresh on mobile
     document.body.style.overscrollBehavior = 'none';
+
+    // Setup tab switching
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.getAttribute('data-tab');
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-pane').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Show selected tab
+            if (tabId === 'game') {
+                document.querySelector('.game-container').classList.remove('hidden');
+                document.querySelector('.tab-content').classList.add('hidden');
+            } else {
+                document.querySelector('.game-container').classList.add('hidden');
+                document.querySelector('.tab-content').classList.remove('hidden');
+                document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            }
+            
+            // Update active button
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            // Reset Aviator game when switching away
+            if (tabId !== 'aviator' && aviatorGameActive) {
+                resetAviatorGame();
+            }
+        });
+    });
 });
 
 // Authentication functions
@@ -659,32 +693,36 @@ document.head.appendChild(style);
 
 // Mobile tab switching
 function setupMobileTabs() {
-    const tabButtons = document.querySelectorAll('.mobile-tabs .tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const gameContainer = document.querySelector('.game-container');
+    const tabContent = document.querySelector('.tab-content');
     
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            const tabName = button.dataset.tab;
+            const tabId = button.getAttribute('data-tab');
             
             // Update active button
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
-            // Show corresponding tab
-            if (tabName === 'game') {
-                document.querySelector('.game-container').classList.remove('hidden');
-                document.querySelector('.tab-content').classList.add('hidden');
+            // Hide all tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            
+            // Show selected content
+            if (tabId === 'game') {
+                gameContainer.classList.remove('hidden');
+                tabContent.classList.add('hidden');
             } else {
-                document.querySelector('.game-container').classList.add('hidden');
-                document.querySelector('.tab-content').classList.remove('hidden');
-                
-                tabPanes.forEach(pane => {
-                    if (pane.id === `${tabName}-tab`) {
-                        pane.classList.add('active');
-                    } else {
-                        pane.classList.remove('active');
-                    }
-                });
+                gameContainer.classList.add('hidden');
+                tabContent.classList.remove('hidden');
+                document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            }
+            
+            // Reset Aviator game when switching away
+            if (tabId !== 'aviator' && aviatorGameActive) {
+                resetAviatorGame();
             }
         });
     });
