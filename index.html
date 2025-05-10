@@ -88,125 +88,42 @@
 
             <div class="mobile-tabs">
                 <button class="tab-btn active" data-tab="game">Game</button>
+                <button class="tab-btn" data-tab="aviator">Aviator</button>
                 <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
                 <button class="tab-btn" data-tab="history">History</button>
             </div>
 
             <div class="tab-content">
-                <div id="leaderboard-tab" class="tab-pane hidden">
-                    <h3>Leaderboard</h3>
-                    <div id="leaderboard-list">
-                        <!-- Leaderboard entries will be added here -->
-                    </div>
-                </div>
-
-                <div id="history-tab" class="tab-pane hidden">
-                    <h3>Transaction History</h3>
-                    <div id="transaction-list">
-                        <!-- Transaction history will be added here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html> 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1a1a1a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mines Game</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="container">
-        <!-- Login/Register Section -->
-        <div id="auth-section" class="auth-section">
-            <div class="auth-form">
-                <h2>Welcome to Mines Game</h2>
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="login">Login</button>
-                    <button class="tab-btn" data-tab="register">Register</button>
-                </div>
-                <div id="login-form" class="form-content">
-                    <input type="text" id="login-username" placeholder="Username" autocomplete="username">
-                    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
-                    <button onclick="login()">Login</button>
-                </div>
-                <div id="register-form" class="form-content hidden">
-                    <input type="text" id="register-username" placeholder="Username" autocomplete="username">
-                    <input type="password" id="register-password" placeholder="Password" autocomplete="new-password">
-                    <input type="password" id="register-confirm-password" placeholder="Confirm Password" autocomplete="new-password">
-                    <button onclick="register()">Register</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Game Section (Hidden by default) -->
-        <div id="game-section" class="game-section hidden">
-            <div class="header">
-                <div class="user-info">
-                    <span id="username-display"></span>
-                    <span id="balance-display">Balance: $1000</span>
-                </div>
-                <button onclick="logout()" class="logout-btn">Logout</button>
-            </div>
-
-            <div class="game-container">
-                <div class="game-board" id="game-board">
-                    <!-- Mines grid will be generated here -->
-                </div>
-                <div class="game-controls">
-                    <div class="mines-settings">
-                        <h3>Mines Settings</h3>
-                        <div class="select-wrapper">
-                            <select id="mine-count" onchange="updateMineCount()">
-                                <option value="1">1 Mine</option>
-                                <option value="2">2 Mines</option>
-                                <option value="5">5 Mines</option>
-                                <option value="7">7 Mines</option>
-                                <option value="9">9 Mines</option>
-                                <option value="10">10 Mines</option>
-                                <option value="15">15 Mines</option>
-                                <option value="20">20 Mines</option>
-                                <option value="24">24 Mines</option>
-                            </select>
+                <div id="aviator-tab" class="tab-pane hidden">
+                    <div class="aviator-game">
+                        <div class="aviator-display">
+                            <div class="plane-container">
+                                <div class="plane">✈️</div>
+                                <div class="multiplier">1.00x</div>
+                            </div>
+                            <div class="flight-path"></div>
                         </div>
-                    </div>
-                    <div class="bet-controls">
-                        <div class="bet-amount-container">
-                            <input type="number" id="bet-amount" placeholder="Bet amount" min="1" inputmode="numeric" pattern="[0-9]*">
-                            <div class="quick-bet-buttons">
-                                <button onclick="setBetAmount(10)">+10</button>
-                                <button onclick="setBetAmount(50)">+50</button>
-                                <button onclick="setBetAmount(100)">+100</button>
+                        <div class="aviator-controls">
+                            <div class="bet-controls">
+                                <div class="bet-amount-container">
+                                    <input type="number" id="aviator-bet-amount" placeholder="Bet amount" min="1" inputmode="numeric" pattern="[0-9]*">
+                                    <div class="quick-bet-buttons">
+                                        <button onclick="setAviatorBetAmount(10)">+10</button>
+                                        <button onclick="setAviatorBetAmount(50)">+50</button>
+                                        <button onclick="setAviatorBetAmount(100)">+100</button>
+                                    </div>
+                                </div>
+                                <button id="place-aviator-bet" onclick="placeAviatorBet()" class="place-bet-btn">Place Bet</button>
+                            </div>
+                            <div class="game-stats">
+                                <div id="aviator-current-bet">Bet: $0</div>
+                                <div id="aviator-multiplier">Multiplier: 1.00x</div>
+                                <div id="aviator-potential-win">Win: $0</div>
+                                <button id="aviator-cashout-btn" onclick="aviatorCashout()" disabled>Cashout</button>
                             </div>
                         </div>
-                        <button onclick="placeBet()" class="place-bet-btn">Place Bet</button>
-                    </div>
-                    <div class="game-stats">
-                        <div id="current-bet">Bet: $0</div>
-                        <div id="multiplier">Multiplier: 1.00x</div>
-                        <div id="probability">Win Chance: 4.00%</div>
-                        <div id="potential-win">Win: $0</div>
-                        <button id="cashout-btn" onclick="cashout()" disabled>Cashout</button>
                     </div>
                 </div>
-            </div>
-
-            <div class="mobile-tabs">
-                <button class="tab-btn active" data-tab="game">Game</button>
-                <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-                <button class="tab-btn" data-tab="history">History</button>
-            </div>
-
-            <div class="tab-content">
                 <div id="leaderboard-tab" class="tab-pane hidden">
                     <h3>Leaderboard</h3>
                     <div id="leaderboard-list">
