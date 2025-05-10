@@ -10,6 +10,14 @@ let gameState = {
     mineCount: 1
 };
 
+// Aviator Game Variables
+let aviatorGameActive = false;
+let aviatorMultiplier = 1.00;
+let aviatorBetAmount = 0;
+let aviatorCrashPoint = 0;
+let aviatorAnimationFrame = null;
+let aviatorStartTime = 0;
+
 // Initialize the game
 document.addEventListener('DOMContentLoaded', () => {
     setupAuthTabs();
@@ -693,4 +701,146 @@ function setBetAmount(amount) {
     } else {
         betInput.value = currentUser.balance;
     }
-} 
+}
+
+// Aviator Game Functions
+function setAviatorBetAmount(amount) {
+    const input = document.getElementById('aviator-bet-amount');
+    const currentValue = parseInt(input.value) || 0;
+    input.value = currentValue + amount;
+}
+
+function placeAviatorBet() {
+    if (aviatorGameActive) return;
+    
+    const betAmount = parseInt(document.getElementById('aviator-bet-amount').value);
+    if (!betAmount || betAmount <= 0) {
+        showToast('Please enter a valid bet amount');
+        return;
+    }
+    
+    if (betAmount > currentUser.balance) {
+        showToast('Insufficient balance');
+        return;
+    }
+    
+    // Deduct bet amount from balance
+    currentUser.balance -= betAmount;
+    aviatorBetAmount = betAmount;
+    updateBalance();
+    
+    // Generate random crash point between 1.00 and 10.00
+    aviatorCrashPoint = (Math.random() * 9 + 1).toFixed(2);
+    
+    // Start the game
+    aviatorGameActive = true;
+    aviatorMultiplier = 1.00;
+    aviatorStartTime = Date.now();
+    
+    // Update UI
+    document.getElementById('place-aviator-bet').disabled = true;
+    document.getElementById('aviator-cashout-btn').disabled = false;
+    document.getElementById('aviator-current-bet').textContent = `Bet: $${betAmount}`;
+    
+    // Start animation
+    const plane = document.querySelector('.plane');
+    plane.classList.add('flying');
+    
+    // Start multiplier update
+    updateAviatorMultiplier();
+}
+
+function updateAviatorMultiplier() {
+    if (!aviatorGameActive) return;
+    
+    const elapsedTime = (Date.now() - aviatorStartTime) / 1000;
+    aviatorMultiplier = (1 + elapsedTime * 0.5).toFixed(2);
+    
+    // Update UI
+    document.querySelector('.multiplier').textContent = `${aviatorMultiplier}x`;
+    document.getElementById('aviator-multiplier').textContent = `Multiplier: ${aviatorMultiplier}x`;
+    document.getElementById('aviator-potential-win').textContent = 
+        `Win: $${(aviatorBetAmount * aviatorMultiplier).toFixed(2)}`;
+    
+    // Check for crash
+    if (parseFloat(aviatorMultiplier) >= parseFloat(aviatorCrashPoint)) {
+        aviatorCrash();
+    } else {
+        aviatorAnimationFrame = requestAnimationFrame(updateAviatorMultiplier);
+    }
+}
+
+function aviatorCashout() {
+    if (!aviatorGameActive) return;
+    
+    // Calculate winnings
+    const winnings = aviatorBetAmount * aviatorMultiplier;
+    currentUser.balance += winnings;
+    updateBalance();
+    
+    // Show success message
+    showToast(`Cashed out at ${aviatorMultiplier}x! Won $${winnings.toFixed(2)}`);
+    
+    // Reset game
+    resetAviatorGame();
+}
+
+function aviatorCrash() {
+    if (!aviatorGameActive) return;
+    
+    // Show crash message
+    showToast(`Crashed at ${aviatorMultiplier}x!`);
+    
+    // Reset game
+    resetAviatorGame();
+}
+
+function resetAviatorGame() {
+    aviatorGameActive = false;
+    aviatorMultiplier = 1.00;
+    aviatorBetAmount = 0;
+    
+    // Update UI
+    document.getElementById('place-aviator-bet').disabled = false;
+    document.getElementById('aviator-cashout-btn').disabled = true;
+    document.getElementById('aviator-current-bet').textContent = 'Bet: $0';
+    document.getElementById('aviator-multiplier').textContent = 'Multiplier: 1.00x';
+    document.getElementById('aviator-potential-win').textContent = 'Win: $0';
+    document.querySelector('.multiplier').textContent = '1.00x';
+    
+    // Reset plane position
+    const plane = document.querySelector('.plane');
+    plane.classList.remove('flying');
+    
+    // Cancel animation
+    if (aviatorAnimationFrame) {
+        cancelAnimationFrame(aviatorAnimationFrame);
+        aviatorAnimationFrame = null;
+    }
+}
+
+// Add tab switching for Aviator
+document.querySelectorAll('.tab-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        const tabId = button.getAttribute('data-tab');
+        
+        // Hide all tabs
+        document.querySelectorAll('.tab-pane').forEach(tab => {
+            tab.classList.add('hidden');
+        });
+        
+        // Show selected tab
+        document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+        
+        // Update active button
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+        
+        // Reset Aviator game when switching away
+        if (tabId !== 'aviator' && aviatorGameActive) {
+            resetAviatorGame();
+        }
+    });
+}); 
