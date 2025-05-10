@@ -49,22 +49,20 @@
                     <!-- Mines grid will be generated here -->
                 </div>
                 <div class="game-controls">
-                    <div class="game-settings">
-                        <div class="setting-group">
-                            <label for="mine-count">Mines:</label>
-                            <div class="select-wrapper">
-                                <select id="mine-count" onchange="updateMineCount()">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="5">5</option>
-                                    <option value="7">7</option>
-                                    <option value="9">9</option>
-                                    <option value="10">10</option>
-                                    <option value="15">15</option>
-                                    <option value="20">20</option>
-                                    <option value="24">24</option>
-                                </select>
-                            </div>
+                    <div class="mines-settings">
+                        <h3>Mines Settings</h3>
+                        <div class="select-wrapper">
+                            <select id="mine-count" onchange="updateMineCount()">
+                                <option value="1">1 Mine</option>
+                                <option value="2">2 Mines</option>
+                                <option value="5">5 Mines</option>
+                                <option value="7">7 Mines</option>
+                                <option value="9">9 Mines</option>
+                                <option value="10">10 Mines</option>
+                                <option value="15">15 Mines</option>
+                                <option value="20">20 Mines</option>
+                                <option value="24">24 Mines</option>
+                            </select>
                         </div>
                     </div>
                     <div class="bet-controls">
